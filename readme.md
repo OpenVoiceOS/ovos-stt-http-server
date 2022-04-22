@@ -1,7 +1,5 @@
 # OpenVoiceOS STT HTTP Server
 
-**THIS IS A WORK IN PROGRESS AND NOT YET FUNCTIONAL**
-
 Turn any OVOS STT plugin into a micro service!
 
 Use with OpenVoiceOS [companion plugin](https://github.com/OpenVoiceOS/ovos-stt-http-server-plugin)
