@@ -2,8 +2,6 @@
 
 Turn any OVOS STT plugin into a micro service!
 
-Use with OpenVoiceOS [companion plugin](https://github.com/OpenVoiceOS/ovos-stt-http-server-plugin)
-
 ## Install
 
 `pip install ovos-stt-http-server`
@@ -23,7 +21,8 @@ options:
 
 ## Companion plugin
 
-coming soon - companion plugin to point to a ovos-stt-http-server instance
+Use with OpenVoiceOS [companion plugin](https://github.com/OpenVoiceOS/ovos-stt-server-plugin)
+
 
 ## Docker
 
@@ -32,8 +31,6 @@ you can create easily create a docker file to serve any plugin
 ```dockerfile
 FROM python:3.7
 
-RUN pip3 install ovos-utils==0.0.15
-RUN pip3 install ovos-plugin-manager==0.0.4
 RUN pip3 install ovos-stt-http-server==0.0.1
 
 RUN pip3 install {PLUGIN_HERE}
