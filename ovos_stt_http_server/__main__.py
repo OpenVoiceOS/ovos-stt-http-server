@@ -20,11 +20,9 @@ def main():
     parser.add_argument("--engine", help="stt plugin to be used", required=True)
     parser.add_argument("--port", help="port number", default=8080)
     parser.add_argument("--host", help="host", default="0.0.0.0")
-    parser.add_argument("--lang", help="language", default="en")
     args = parser.parse_args()
 
-    # TODO one model per language cli args support
-    start_stt_server(args.engine, args.port, args.host, args.lang)
+    start_stt_server(args.engine, args.port, args.host)
 
 
 if __name__ == '__main__':

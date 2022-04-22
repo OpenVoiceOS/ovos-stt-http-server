@@ -3,14 +3,14 @@ from setuptools import setup
 
 setup(
     name='ovos-stt-http-server',
-    version='0.0.1',
+    version='0.0.2a1',
     description='simple aiohttp server to host OpenVoiceOS stt plugins as a service',
     url='https://github.com/OpenVoiceOS/ovos-stt-http-server',
     author='JarbasAi',
     author_email='jarbasai@mailfence.com',
     license='Apache-2.0',
     packages=['ovos_stt_http_server'],
-    install_requires=["ovos-plugin-manager", "asgiref", "aiohttp"],
+    install_requires=["ovos-plugin-manager", "flask"],
     zip_safe=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
