@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='ovos-stt-http-server',
-    version='0.0.2a1',
+    version='0.0.2a2',
     description='simple aiohttp server to host OpenVoiceOS stt plugins as a service',
     url='https://github.com/OpenVoiceOS/ovos-stt-http-server',
     author='JarbasAi',
