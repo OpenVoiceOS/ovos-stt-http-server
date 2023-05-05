@@ -16,7 +16,7 @@ def transcribe(audio_file, language: str):
 
 def bind_gradio_service(app, stt_engine: ModelContainer,
                         title, description, info, badge,
-                        default_lang="en"):
+                        default_lang="en", cache=True):
     global STT
     STT = stt_engine
     languages = list(stt_engine.plugin().available_languages or [default_lang])
@@ -47,7 +47,7 @@ def bind_gradio_service(app, stt_engine: ModelContainer,
             "textbox"
         ],
         examples=[[e, basename(splitext(e)[0])] for e in examples],
-        cache_examples=True,  # Takes some time at init, but speeds up runtime
+        cache_examples=cache,  # Takes some time at init, but speeds up runtime
         live=True,
         title=title,
         description=description,

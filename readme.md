@@ -13,12 +13,19 @@ ovos-stt-server --help
 usage: ovos-stt-server [-h] [--engine ENGINE] [--port PORT] [--host HOST]
 
 options:
-  -h, --help       show this help message and exit
-  --engine ENGINE  stt plugin to be used
-  --port PORT      port number
-  --host HOST      host
+  -h, --help                  show this help message and exit
+  --engine ENGINE             stt plugin to be used
+  --port PORT                 port number
+  --host HOST                 host
+  --lang LANG                 default language
+  --gradio                    flag to enable Gradio web UI
+  --cache                     flag to pre-cache examples in Gradio web UI
+  --title TITLE               title for Gradio UI
+  --description DESCRIPTION   Description for Gradio UI
+  --info INFO                 Text to display in Gradio UI
+  --badge BADGE               URL of badge to show in Gradio UI
 ```
-
+> Note: `ffmpeg` is required for Gradio
 ## Companion plugin
 
 Use with OpenVoiceOS [companion plugin](https://github.com/OpenVoiceOS/ovos-stt-server-plugin)
