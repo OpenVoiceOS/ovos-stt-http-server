@@ -11,16 +11,16 @@
 # limitations under the License.
 #
 from tempfile import NamedTemporaryFile
-from time import sleep
 
-from flask import Flask, request
+from fastapi import FastAPI
 from ovos_plugin_manager.stt import load_stt_plugin
 from ovos_utils.log import LOG
 from speech_recognition import Recognizer, AudioFile, AudioData
+from starlette.requests import Request
 
 
 class ModelContainer:
-    def __init__(self, plugin, config=None):
+    def __init__(self, plugin: str, config: dict=None):
         self.plugin = load_stt_plugin(plugin)
         if not self.plugin:
             raise ValueError(f"Failed to load STT: {plugin}")
@@ -43,7 +43,7 @@ class ModelContainer:
         if session_id in self.data:
             self.data.pop(session_id)
 
-    def process_audio(self, audio, lang, session_id=None):
+    def process_audio(self, audio: AudioData, lang, session_id=None):
         session_id = session_id or lang  # shared model for non-streaming stt
         engine = self.get_engine(session_id)
         if audio or engine.can_stream:
@@ -89,46 +89,48 @@ def bytes2audiodata(data):
 
 
 def create_app(stt_plugin):
-    app = Flask(__name__)
+    app = FastAPI()
     model = ModelContainer(stt_plugin)
 
-    @app.route("/stt", methods=['POST'])
-    def get_stt():
-        lang = str(request.args.get("lang", "en-us")).lower()
-        audio = bytes2audiodata(request.data)
+    @app.post("/stt")
+    async def get_stt(request: Request):
+        LOG.debug(f"Handling STT Request: {request}")
+        lang = str(request.query_params.get("lang", "en-us")).lower()
+        audio_bytes = await request.body()
+        LOG.debug(len(audio_bytes))
+        audio = bytes2audiodata(audio_bytes)
         return model.process_audio(audio, lang)
 
-    @app.route("/stream/start", methods=['POST'])
-    def stream_start():
-        lang = str(request.args.get("lang", "en-us")).lower()
-        uuid = str(request.args.get("uuid") or lang)
+    @app.post("/stream/start")
+    def stream_start(request: Request):
+        lang = str(request.query_params.get("lang", "en-us")).lower()
+        uuid = str(request.query_params.get("uuid") or lang)
         model.load_engine(uuid, {"lang": lang})
         model.stream_start(uuid)
         return {"status": "ok", "uuid": uuid, "lang": lang}
 
-    @app.route("/stream/audio", methods=['POST'])
-    def stream():
-        audio = request.data
-        lang = str(request.args.get("lang", "en-us")).lower()
-        uuid = str(request.args.get("uuid") or lang)
+    @app.post("/stream/audio")
+    async def stream(request: Request):
+        audio = await request.body()
+        lang = str(request.query_params.get("lang", "en-us")).lower()
+        uuid = str(request.query_params.get("uuid") or lang)
         transcript = model.stream_data(audio, uuid)
         return {"status": "ok", "uuid": uuid,
                 "lang": lang, "transcript": transcript}
 
-    @app.route("/stream/end", methods=['POST'])
-    def stream_end():
-        lang = str(request.args.get("lang", "en-us")).lower()
-        uuid = str(request.args.get("uuid") or lang)
+    @app.post("/stream/end")
+    def stream_end(request: Request):
+        lang = str(request.query_params.get("lang", "en-us")).lower()
+        uuid = str(request.query_params.get("uuid") or lang)
         # model.wait_until_done(uuid)
         transcript = model.stream_stop(uuid)
         LOG.info(transcript)
         return {"status": "ok", "uuid": uuid,
                 "lang": lang, "transcript": transcript}
 
-    return app
+    return app, model
 
 
-def start_stt_server(engine, port=9666, host="0.0.0.0"):
-    app = create_app(engine)
-    app.run(port=port, use_reloader=False, host=host)
-    return app
+def start_stt_server(engine: str) -> (FastAPI, ModelContainer):
+    app, engine = create_app(engine)
+    return app, engine

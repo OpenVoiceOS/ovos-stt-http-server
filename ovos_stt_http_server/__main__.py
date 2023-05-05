@@ -11,7 +11,10 @@
 # limitations under the License.
 #
 import argparse
+import uvicorn
+from ovos_utils.log import LOG
 
+from ovos_stt_http_server.gradio_app import bind_gradio_service
 from ovos_stt_http_server import start_stt_server
 
 
@@ -20,9 +23,26 @@ def main():
     parser.add_argument("--engine", help="stt plugin to be used", required=True)
     parser.add_argument("--port", help="port number", default=8080)
     parser.add_argument("--host", help="host", default="0.0.0.0")
+    parser.add_argument("--lang", help="default language supported by plugin",
+                        default="en-us")
+    parser.add_argument("--gradio", help="Enable Gradio Web UI",
+                        action="store_true")
+    parser.add_argument("--title", help="Title for webUI",
+                        default="STT")
+    parser.add_argument("--description", help="Text description to print in UI",
+                        default="Get Speech-To-Text")
+    parser.add_argument("--info", help="Text to display at end of UI",
+                        default=None)
+    parser.add_argument("--badge", help="URL of visitor badge", default=None)
     args = parser.parse_args()
 
-    start_stt_server(args.engine, args.port, args.host)
+    server, engine = start_stt_server(args.engine)
+    LOG.info("Server Started")
+    if args.gradio:
+        bind_gradio_service(server, engine, args.title, args.description,
+                            args.info, args.badge, args.lang)
+        LOG.info("Gradio Started")
+    uvicorn.run(server, host=args.host, port=args.port)
 
 
 if __name__ == '__main__':
