@@ -1,7 +1,7 @@
 
 import gradio as gr
 
-from os.path import join, dirname, basename, splitext
+from os.path import join, dirname, basename, splitext, isfile
 from ovos_utils.log import LOG
 from ovos_stt_http_server import ModelContainer, bytes2audiodata
 
@@ -32,6 +32,7 @@ def bind_gradio_service(app, stt_engine: ModelContainer,
 
     examples = [join(dirname(__file__), 'audio', f'{lang.split("-")[0]}.mp3')
                 for lang in languages]
+    examples = [example for example in examples if isfile(example)]
     iface = gr.Interface(
         fn=transcribe,
         inputs=[
