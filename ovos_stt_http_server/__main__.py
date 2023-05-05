@@ -27,6 +27,8 @@ def main():
                         default="en-us")
     parser.add_argument("--gradio", help="Enable Gradio Web UI",
                         action="store_true")
+    parser.add_argument("--cache", help="Cache models for Gradio demo",
+                        action="store_true")
     parser.add_argument("--title", help="Title for webUI",
                         default="STT")
     parser.add_argument("--description", help="Text description to print in UI",
@@ -40,7 +42,7 @@ def main():
     LOG.info("Server Started")
     if args.gradio:
         bind_gradio_service(server, engine, args.title, args.description,
-                            args.info, args.badge, args.lang)
+                            args.info, args.badge, args.lang, args.cache)
         LOG.info("Gradio Started")
     uvicorn.run(server, host=args.host, port=args.port)
 
