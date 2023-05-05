@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.0.2a4](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a4) (2023-05-05)
+## [0.0.2a5](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a5) (2023-05-05)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/afb94a25f646ab2a9f90a35f3914bc301067b289...0.0.2a4)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a4...0.0.2a5)
+
+**Fixed bugs:**
+
+- Handle supported languages with no example audio file [\#4](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/4) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [V0.0.2a4](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a4) (2023-05-05)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/afb94a25f646ab2a9f90a35f3914bc301067b289...V0.0.2a4)
 
 **Implemented enhancements:**
 
