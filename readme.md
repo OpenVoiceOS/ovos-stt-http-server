@@ -6,6 +6,23 @@ Turn any OVOS STT plugin into a micro service!
 
 `pip install ovos-stt-http-server`
 
+## Companion plugin
+
+Use in your voice assistant with OpenVoiceOS [companion plugin](https://github.com/OpenVoiceOS/ovos-stt-server-plugin)
+
+## Configuration
+
+the plugin is configured just like if it was running in the assistant, under mycroft.conf
+
+eg
+```
+  "stt": {
+    "module": "ovos-stt-plugin-deepgram",
+    "ovos-stt-plugin-deepgram": {"key": "xtimes40"}
+  }
+```
+
+
 ## Usage
 
 ```bash
@@ -26,9 +43,6 @@ options:
   --badge BADGE               URL of badge to show in Gradio UI
 ```
 > Note: `ffmpeg` is required for Gradio
-## Companion plugin
-
-Use with OpenVoiceOS [companion plugin](https://github.com/OpenVoiceOS/ovos-stt-server-plugin)
 
 
 ## Docker
