@@ -20,7 +20,7 @@ from starlette.requests import Request
 
 
 class ModelContainer:
-    def __init__(self, plugin: str, config: dict=None):
+    def __init__(self, plugin: str, config: dict = None):
         self.plugin = load_stt_plugin(plugin)
         if not self.plugin:
             raise ValueError(f"Failed to load STT: {plugin}")
@@ -72,8 +72,7 @@ class ModelContainer:
         if engine.can_stream:
             transcript = engine.stream_stop()
         else:
-            audio = AudioData(self.data[session_id],
-                              sample_rate=16000, sample_width=2)
+            audio = AudioData(self.data[session_id], sample_rate=16000, sample_width=2)
             transcript = engine.execute(audio)
         self.unload_engine(session_id)
         return transcript or ""
@@ -99,7 +98,7 @@ def create_app(stt_plugin):
     @app.post("/stt")
     async def get_stt(request: Request):
         LOG.debug(f"Handling STT Request: {request}")
-        lang = str(request.query_params.get("lang", "en-us")).lower()
+        lang = str(request.query_params.get("lang", "en")).lower()
         audio_bytes = await request.body()
         LOG.debug(len(audio_bytes))
         audio = bytes2audiodata(audio_bytes)
@@ -107,7 +106,7 @@ def create_app(stt_plugin):
 
     @app.post("/stream/start")
     def stream_start(request: Request):
-        lang = str(request.query_params.get("lang", "en-us")).lower()
+        lang = str(request.query_params.get("lang", "en")).lower()
         uuid = str(request.query_params.get("uuid") or lang)
         model.load_engine(uuid, {"lang": lang})
         model.stream_start(uuid)
@@ -116,21 +115,19 @@ def create_app(stt_plugin):
     @app.post("/stream/audio")
     async def stream(request: Request):
         audio = await request.body()
-        lang = str(request.query_params.get("lang", "en-us")).lower()
+        lang = str(request.query_params.get("lang", "en")).lower()
         uuid = str(request.query_params.get("uuid") or lang)
         transcript = model.stream_data(audio, uuid)
-        return {"status": "ok", "uuid": uuid,
-                "lang": lang, "transcript": transcript}
+        return {"status": "ok", "uuid": uuid, "lang": lang, "transcript": transcript}
 
     @app.post("/stream/end")
     def stream_end(request: Request):
-        lang = str(request.query_params.get("lang", "en-us")).lower()
+        lang = str(request.query_params.get("lang", "en")).lower()
         uuid = str(request.query_params.get("uuid") or lang)
         # model.wait_until_done(uuid)
         transcript = model.stream_stop(uuid)
         LOG.info(transcript)
-        return {"status": "ok", "uuid": uuid,
-                "lang": lang, "transcript": transcript}
+        return {"status": "ok", "uuid": uuid, "lang": lang, "transcript": transcript}
 
     return app, model
 
