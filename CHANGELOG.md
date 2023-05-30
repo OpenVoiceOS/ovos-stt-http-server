@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.0.2a6](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a6) (2023-05-30)
+## [0.0.2a7](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a7) (2023-05-30)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a5...0.0.2a6)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a6...0.0.2a7)
+
+**Implemented enhancements:**
+
+- add gradio to status report [\#7](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/7) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.2a6](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a6) (2023-05-30)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a5...V0.0.2a6)
 
 **Implemented enhancements:**
 
