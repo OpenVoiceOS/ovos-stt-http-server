@@ -88,13 +88,15 @@ def bytes2audiodata(data):
     return audio
 
 
-def create_app(stt_plugin):
+def create_app(stt_plugin, has_gradio=False):
     app = FastAPI()
     model = ModelContainer(stt_plugin)
 
     @app.get("/status")
     def stats(request: Request):
-        return {"status": "ok", "plugin": stt_plugin}
+        return {"status": "ok",
+                "plugin": stt_plugin,
+                "gradio": has_gradio}
 
     @app.post("/stt")
     async def get_stt(request: Request):
@@ -135,6 +137,6 @@ def create_app(stt_plugin):
     return app, model
 
 
-def start_stt_server(engine: str) -> (FastAPI, ModelContainer):
-    app, engine = create_app(engine)
+def start_stt_server(engine: str, has_gradio: bool = False) -> (FastAPI, ModelContainer):
+    app, engine = create_app(engine, has_gradio)
     return app, engine

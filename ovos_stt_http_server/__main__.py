@@ -38,7 +38,7 @@ def main():
     parser.add_argument("--badge", help="URL of visitor badge", default=None)
     args = parser.parse_args()
 
-    server, engine = start_stt_server(args.engine)
+    server, engine = start_stt_server(args.engine, has_gradio=bool(args.gradio))
     LOG.info("Server Started")
     if args.gradio:
         bind_gradio_service(server, engine, args.title, args.description,
