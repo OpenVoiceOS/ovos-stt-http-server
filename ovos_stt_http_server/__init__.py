@@ -92,6 +92,10 @@ def create_app(stt_plugin):
     app = FastAPI()
     model = ModelContainer(stt_plugin)
 
+    @app.get("/status")
+    def stats(request: Request):
+        return {"status": "ok", "plugin": stt_plugin}
+
     @app.post("/stt")
     async def get_stt(request: Request):
         LOG.debug(f"Handling STT Request: {request}")
