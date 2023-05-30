@@ -1,8 +1,16 @@
 # Changelog
 
-## [0.0.2a5](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a5) (2023-05-05)
+## [0.0.2a6](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a6) (2023-05-30)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a4...0.0.2a5)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a5...0.0.2a6)
+
+**Implemented enhancements:**
+
+- add stats endpoint + update readme [\#6](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/6) ([JarbasAl](https://github.com/JarbasAl))
+
+## [V0.0.2a5](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a5) (2023-05-05)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a4...V0.0.2a5)
 
 **Fixed bugs:**
 
