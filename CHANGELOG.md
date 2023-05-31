@@ -1,8 +1,8 @@
 # Changelog
 
-## [0.0.2a7](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a7) (2023-05-30)
+## [V0.0.2a7](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a7) (2023-05-30)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a6...0.0.2a7)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a6...V0.0.2a7)
 
 **Implemented enhancements:**
 
