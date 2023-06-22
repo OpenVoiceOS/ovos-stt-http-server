@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.0.2a9](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a9) (2023-06-22)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a8...0.0.2a9)
+
+**Fixed bugs:**
+
+- expected str, bytes or os.PathLike object, not NoneType [\#9](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/9)
+
+**Closed issues:**
+
+- Default "lang" option should only get "en", not "en-us" [\#10](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/10)
+
+**Merged pull requests:**
+
+- Resolve Gradio errors [\#13](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/13) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update logging [\#12](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/12) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [V0.0.2a8](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a8) (2023-05-31)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a7...V0.0.2a8)
+
 ## [V0.0.2a7](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a7) (2023-05-30)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a6...V0.0.2a7)
