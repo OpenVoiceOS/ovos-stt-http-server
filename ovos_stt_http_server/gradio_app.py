@@ -24,7 +24,7 @@ def bind_gradio_service(app, stt_engine: ModelContainer,
     LOG.debug(languages)
 
     if default_lang not in languages:
-        LOG.warning(f"{default_lang} not in languages, trying ISO 639-1 code")
+        LOG.info(f"{default_lang} not in languages, trying ISO 639-1 code")
         default_lang = default_lang.split('-')[0]
     if default_lang not in languages:
         LOG.warning(f"{default_lang} not in languages, choosing first lang")
