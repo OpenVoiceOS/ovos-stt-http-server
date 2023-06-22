@@ -9,10 +9,14 @@ STT = None
 
 
 def transcribe(audio_file, language: str):
-    with open(audio_file, 'rb') as f:
-        audio = f.read()
-    return STT.process_audio(bytes2audiodata(audio), language)
-
+    try:
+        with open(audio_file, 'rb') as f:
+            audio = f.read()
+        return STT.process_audio(bytes2audiodata(audio), language)
+    except TypeError:
+        LOG.error(f"Requested file not valid: {audio_file}")
+    except FileNotFoundError:
+        LOG.error(f"Requested file not found: {audio_file}")
 
 def bind_gradio_service(app, stt_engine: ModelContainer,
                         title, description, info, badge,
