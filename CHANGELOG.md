@@ -1,8 +1,21 @@
 # Changelog
 
-## [0.0.2a9](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a9) (2023-06-22)
+## [0.0.2a10](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a10) (2023-06-26)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a8...0.0.2a9)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a9...0.0.2a10)
+
+**Closed issues:**
+
+- README.md the Dockerfile ENTRYPOINT command is incorrect [\#8](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/8)
+- Improve README [\#1](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/1)
+
+**Merged pull requests:**
+
+- Update automation to shared actions [\#14](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/14) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [V0.0.2a9](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a9) (2023-06-22)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a8...V0.0.2a9)
 
 **Fixed bugs:**
 
