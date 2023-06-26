@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2) (2023-06-26)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.0.2a10...0.0.2)
+
+**Merged pull requests:**
+
+- Fix automation copy/paste error [\#15](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/15) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [0.0.2a10](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a10) (2023-06-26)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a9...0.0.2a10)
