@@ -19,6 +19,9 @@ from speech_recognition import Recognizer, AudioFile, AudioData
 from starlette.requests import Request
 
 
+LOG.set_level("ERROR")  # avoid server side logs
+
+
 class ModelContainer:
     def __init__(self, plugin: str, config: dict=None):
         self.plugin = load_stt_plugin(plugin)
@@ -100,10 +103,8 @@ def create_app(stt_plugin, has_gradio=False):
 
     @app.post("/stt")
     async def get_stt(request: Request):
-        LOG.debug(f"Handling STT Request: {request}")
         lang = str(request.query_params.get("lang", "en-us")).lower()
         audio_bytes = await request.body()
-        LOG.debug(len(audio_bytes))
         audio = bytes2audiodata(audio_bytes)
         return model.process_audio(audio, lang)
 
@@ -130,7 +131,6 @@ def create_app(stt_plugin, has_gradio=False):
         uuid = str(request.query_params.get("uuid") or lang)
         # model.wait_until_done(uuid)
         transcript = model.stream_stop(uuid)
-        LOG.info(transcript)
         return {"status": "ok", "uuid": uuid,
                 "lang": lang, "transcript": transcript}
 
