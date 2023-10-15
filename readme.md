@@ -56,7 +56,7 @@ RUN pip3 install ovos-stt-http-server==0.0.1
 
 RUN pip3 install {PLUGIN_HERE}
 
-ENTRYPOINT ovos-stt-http-server --engine {PLUGIN_HERE}
+ENTRYPOINT ovos-stt-server --engine {PLUGIN_HERE}
 ```
 
 build it
