@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.0.3a2](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.3a2) (2024-10-01)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.0.3a1...0.0.3a2)
+
+**Fixed bugs:**
+
+- Audio file could not be read as PCM WAV, AIFF/AIFF-C, or Native FLAC [\#16](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/16)
+
+**Closed issues:**
+
+- Support primary and fallback both being ovos-stt-http-server instances [\#5](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/5)
+
+**Merged pull requests:**
+
+- fix:requirements [\#21](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/21) ([JarbasAl](https://github.com/JarbasAl))
+- Fix docker endpoint [\#18](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/18) ([atd](https://github.com/atd))
+
 ## [0.0.3a1](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.3a1) (2023-10-14)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.0.2...0.0.3a1)
