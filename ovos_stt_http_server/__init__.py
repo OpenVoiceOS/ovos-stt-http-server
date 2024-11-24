@@ -21,7 +21,7 @@ from ovos_utils.log import LOG
 from speech_recognition import AudioData, Recognizer, AudioFile
 from starlette.requests import Request
 
-#LOG.set_level("ERROR")  # avoid server side logs
+LOG.set_level("ERROR")  # avoid server side logs
 
 
 class ModelContainer:
@@ -33,7 +33,7 @@ class ModelContainer:
         if lang_plugin:
             lang_plugin = load_audio_transformer_plugin(lang_plugin)
             if not lang_plugin:
-                raise ValueError(f"Failed to load lang detection plugin: {plugin}")
+                raise ValueError(f"Failed to load lang detection plugin: {lang_plugin}")
             assert issubclass(lang_plugin, AudioLanguageDetector)
             LOG.info(f"Loading Audio Language detector plugin: {lang_plugin}")
             self.lang_plugin = lang_plugin()
@@ -62,7 +62,7 @@ class MultiModelContainer:
         if lang_plugin:
             lang_plugin = load_audio_transformer_plugin(lang_plugin)
             if not lang_plugin:
-                raise ValueError(f"Failed to load lang detection plugin: {plugin}")
+                raise ValueError(f"Failed to load lang detection plugin: {lang_plugin}")
             assert issubclass(lang_plugin, AudioLanguageDetector)
             self.lang_plugin = lang_plugin()
         self.engines = {}
