@@ -128,7 +128,9 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
 
     @app.post("/lang_detect")
     async def get_lang(request: Request):
-        valid = request.query_params.get("valid_langs", [])
+        valid = request.query_params.get("valid_langs").split(",")
+        if len(valid) == 1:
+            return {"lang": valid[0], "conf": 1.0}
         audio_bytes = await request.body()
         lang, prob = model.detect_language(audio_bytes, valid_langs=valid)
         return {"lang": lang, "conf": prob}
