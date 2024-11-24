@@ -14,6 +14,7 @@ from tempfile import NamedTemporaryFile
 
 from typing import List, Tuple, Optional, Set, Union
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 from ovos_config import Configuration
 from ovos_plugin_manager.audio_transformers import load_audio_transformer_plugin, AudioLanguageDetector
 from ovos_plugin_manager.stt import load_stt_plugin
@@ -116,7 +117,7 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
                 "lang_plugin": lang_plugin,
                 "gradio": has_gradio}
 
-    @app.post("/stt")
+    @app.post("/stt", response_class=PlainTextResponse)
     async def get_stt(request: Request):
         lang = str(request.query_params.get("lang", Configuration().get("lang", "auto"))).lower()
         audio_bytes = await request.body()
