@@ -30,20 +30,25 @@ ovos-stt-server --help
 usage: ovos-stt-server [-h] [--engine ENGINE] [--port PORT] [--host HOST]
 
 options:
-  -h, --help                  show this help message and exit
-  --engine ENGINE             stt plugin to be used
-  --port PORT                 port number
-  --host HOST                 host
-  --lang LANG                 default language
-  --gradio                    flag to enable Gradio web UI
-  --cache                     flag to pre-cache examples in Gradio web UI
-  --title TITLE               title for Gradio UI
-  --description DESCRIPTION   Description for Gradio UI
-  --info INFO                 Text to display in Gradio UI
-  --badge BADGE               URL of badge to show in Gradio UI
+  -h, --help            show this help message and exit
+  --engine ENGINE       stt plugin to be used
+  --lang-engine LANG_ENGINE
+                        audio language detection plugin to be used (optional)
+  --port PORT           port number
+  --host HOST           host
+  --lang LANG           default language supported by plugin (default comes from mycroft.conf)
+  --multi               Load a plugin instance per language (force lang support, loads multiple plugins into memory)
+  --gradio              Enable Gradio Web UI
+  --cache               Cache models for Gradio demo
+  --title TITLE         Title for webUI
+  --description DESCRIPTION
+                        Text description to print in UI
+  --info INFO           Text to display at end of UI
+  --badge BADGE         URL of visitor badge
 ```
 > Note: `ffmpeg` is required for Gradio
 
+eg `ovos-stt-server --engine ovos-stt-plugin-fasterwhisper --lang-engine ovos-audio-transformer-plugin-fasterwhisper`
 
 ## Docker
 

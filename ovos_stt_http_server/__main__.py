@@ -11,20 +11,25 @@
 # limitations under the License.
 #
 import argparse
+
 import uvicorn
+from ovos_config import Configuration
 from ovos_utils.log import LOG
 
-from ovos_stt_http_server.gradio_app import bind_gradio_service
 from ovos_stt_http_server import start_stt_server
+from ovos_stt_http_server.gradio_app import bind_gradio_service
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--engine", help="stt plugin to be used", required=True)
+    parser.add_argument("--lang-engine", help="audio language detection plugin to be used")
     parser.add_argument("--port", help="port number", default=8080)
     parser.add_argument("--host", help="host", default="0.0.0.0")
     parser.add_argument("--lang", help="default language supported by plugin",
-                        default="en-us")
+                        default=Configuration().get("lang", "en-us"))
+    parser.add_argument("--multi", help="Load a plugin instance per language (force lang support)",
+                        action="store_true")
     parser.add_argument("--gradio", help="Enable Gradio Web UI",
                         action="store_true")
     parser.add_argument("--cache", help="Cache models for Gradio demo",
@@ -38,7 +43,9 @@ def main():
     parser.add_argument("--badge", help="URL of visitor badge", default=None)
     args = parser.parse_args()
 
-    server, engine = start_stt_server(args.engine, has_gradio=bool(args.gradio))
+    server, engine = start_stt_server(args.engine, lang_engine=args.lang_engine,
+                                      multi=bool(args.multi),
+                                      has_gradio=bool(args.gradio))
     LOG.info("Server Started")
     if args.gradio:
         bind_gradio_service(server, engine, args.title, args.description,
