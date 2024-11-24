@@ -12,15 +12,16 @@
 #
 from tempfile import NamedTemporaryFile
 
+from typing import List, Tuple, Optional, Set, Union
 from fastapi import FastAPI
 from ovos_config import Configuration
 from ovos_plugin_manager.audio_transformers import load_audio_transformer_plugin, AudioLanguageDetector
 from ovos_plugin_manager.stt import load_stt_plugin
 from ovos_utils.log import LOG
-from speech_recognition import AudioData
+from speech_recognition import AudioData, Recognizer, AudioFile
 from starlette.requests import Request
 
-LOG.set_level("ERROR")  # avoid server side logs
+#LOG.set_level("ERROR")  # avoid server side logs
 
 
 class ModelContainer:
@@ -38,10 +39,15 @@ class ModelContainer:
             self.lang_plugin = lang_plugin()
         LOG.info(f"Loading STT plugin: {plugin}")
         self.engine = plugin(config)
+        if self.lang_plugin:
+            self.engine.bind(self.lang_plugin)
+
+    def detect_language(self, audio, valid_langs: Optional[Union[Set[str], List[str]]] = None) -> Tuple[str, float]:
+        if self.lang_plugin is None:
+            return self.engine.detect_language(audio, valid_langs)
+        return self.lang_plugin.detect(audio, valid_langs)
 
     def process_audio(self, audio: AudioData, lang: str = "auto"):
-        if lang == "auto":
-            lang, prob = self.lang_plugin.detect(audio)
         return self.engine.execute(audio, language=lang) or ""
 
 
@@ -62,6 +68,9 @@ class MultiModelContainer:
         self.engines = {}
         self.config = config or {}
 
+    def detect_language(self, audio, valid_langs: Optional[Union[Set[str], List[str]]] = None) -> Tuple[str, float]:
+        return self.lang_plugin.detect(audio, valid_langs)
+
     def get_engine(self, lang: str):
         if lang not in self.engines:
             self.load_engine(lang)
@@ -72,14 +81,14 @@ class MultiModelContainer:
         config = config or self.config
         config["lang"] = lang
         self.engines[lang] = self.plugin_class(config=config)
+        if self.lang_plugin:
+            self.engines[lang].bind(self.lang_plugin)
 
     def unload_engine(self, lang: str):
         if lang in self.engines:
             self.engines.pop(lang)
 
     def process_audio(self, audio: AudioData, lang: str):
-        if lang == "auto":
-            lang, prob = self.lang_plugin.detect(audio.get_wav_data())
         engine = self.get_engine(lang)
         return engine.execute(audio, language=lang) or ""
 
@@ -109,15 +118,18 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
 
     @app.post("/stt")
     async def get_stt(request: Request):
-        lang = str(request.query_params.get("lang", Configuration().get("lang", "en-us"))).lower()
+        lang = str(request.query_params.get("lang", Configuration().get("lang", "auto"))).lower()
         audio_bytes = await request.body()
         audio = bytes2audiodata(audio_bytes)
+        if lang == "auto":
+            lang, prob = model.detect_language(audio_bytes)
         return model.process_audio(audio, lang)
 
     @app.post("/lang_detect")
     async def get_lang(request: Request):
+        valid = request.query_params.get("valid_langs", [])
         audio_bytes = await request.body()
-        lang, prob = model.lang_plugin.detect(audio_bytes)
+        lang, prob = model.detect_language(audio_bytes, valid_langs=valid)
         return {"lang": lang, "conf": prob}
 
     return app, model
