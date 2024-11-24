@@ -1,82 +1,45 @@
 # Changelog
 
-## [0.0.2](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2) (2023-06-26)
+## [0.0.3a4](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.3a4) (2024-11-24)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.0.2a10...0.0.2)
-
-**Merged pull requests:**
-
-- Fix automation copy/paste error [\#15](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/15) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [0.0.2a10](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.2a10) (2023-06-26)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a9...0.0.2a10)
-
-**Closed issues:**
-
-- README.md the Dockerfile ENTRYPOINT command is incorrect [\#8](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/8)
-- Improve README [\#1](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.0.3a3...0.0.3a4)
 
 **Merged pull requests:**
 
-- Update automation to shared actions [\#14](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/14) ([NeonDaniel](https://github.com/NeonDaniel))
+- feat:semver [\#22](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/22) ([JarbasAl](https://github.com/JarbasAl))
 
-## [V0.0.2a9](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a9) (2023-06-22)
+## [0.0.3a3](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.3a3) (2024-11-24)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a8...V0.0.2a9)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.0.3a2...0.0.3a3)
+
+**Implemented enhancements:**
+
+- feat/lang\_detection\_plugin [\#19](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/19) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.0.3a2](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.3a2) (2024-10-01)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.0.3a1...0.0.3a2)
 
 **Fixed bugs:**
 
-- expected str, bytes or os.PathLike object, not NoneType [\#9](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/9)
+- Audio file could not be read as PCM WAV, AIFF/AIFF-C, or Native FLAC [\#16](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/16)
 
 **Closed issues:**
 
-- Default "lang" option should only get "en", not "en-us" [\#10](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/10)
+- Support primary and fallback both being ovos-stt-http-server instances [\#5](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/5)
 
 **Merged pull requests:**
 
-- Resolve Gradio errors [\#13](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/13) ([NeonDaniel](https://github.com/NeonDaniel))
-- Update logging [\#12](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/12) ([NeonDaniel](https://github.com/NeonDaniel))
+- fix:requirements [\#21](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/21) ([JarbasAl](https://github.com/JarbasAl))
+- Fix docker endpoint [\#18](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/18) ([atd](https://github.com/atd))
 
-## [V0.0.2a8](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a8) (2023-05-31)
+## [0.0.3a1](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.0.3a1) (2023-10-14)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a7...V0.0.2a8)
-
-## [V0.0.2a7](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a7) (2023-05-30)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a6...V0.0.2a7)
-
-**Implemented enhancements:**
-
-- add gradio to status report [\#7](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/7) ([JarbasAl](https://github.com/JarbasAl))
-
-## [V0.0.2a6](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a6) (2023-05-30)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a5...V0.0.2a6)
-
-**Implemented enhancements:**
-
-- add stats endpoint + update readme [\#6](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/6) ([JarbasAl](https://github.com/JarbasAl))
-
-## [V0.0.2a5](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a5) (2023-05-05)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/V0.0.2a4...V0.0.2a5)
-
-**Fixed bugs:**
-
-- Handle supported languages with no example audio file [\#4](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/4) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [V0.0.2a4](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/V0.0.2a4) (2023-05-05)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/afb94a25f646ab2a9f90a35f3914bc301067b289...V0.0.2a4)
-
-**Implemented enhancements:**
-
-- Add GitHub Automation [\#3](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/3) ([NeonDaniel](https://github.com/NeonDaniel))
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.0.2...0.0.3a1)
 
 **Merged pull requests:**
 
-- Add Gradio UI with example audio [\#2](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/2) ([NeonDaniel](https://github.com/NeonDaniel))
+- log level error [\#17](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/17) ([JarbasAl](https://github.com/JarbasAl))
 
 
 
