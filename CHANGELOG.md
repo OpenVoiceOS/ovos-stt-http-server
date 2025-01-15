@@ -1,12 +1,12 @@
 # Changelog
 
-## [0.1.1a1](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.1a1) (2024-11-24)
+## [0.1.2a1](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.2a1) (2025-01-15)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.0...0.1.1a1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.1...0.1.2a1)
 
 **Merged pull requests:**
 
-- fix/valid\_langs\_arg [\#24](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/24) ([JarbasAl](https://github.com/JarbasAl))
+- fix:int port [\#26](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/26) ([JarbasAl](https://github.com/JarbasAl))
 
 
 

@@ -51,7 +51,7 @@ def main():
         bind_gradio_service(server, engine, args.title, args.description,
                             args.info, args.badge, args.lang, args.cache)
         LOG.info("Gradio Started")
-    uvicorn.run(server, host=args.host, port=args.port)
+    uvicorn.run(server, host=args.host, port=int(args.port))
 
 
 if __name__ == '__main__':
