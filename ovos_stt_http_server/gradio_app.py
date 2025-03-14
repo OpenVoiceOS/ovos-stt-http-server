@@ -23,7 +23,7 @@ def bind_gradio_service(app, stt_engine: ModelContainer,
                         default_lang="en", cache=True):
     global STT
     STT = stt_engine
-    languages = list(stt_engine.plugin().available_languages or [default_lang])
+    languages = list(stt_engine.engine.available_languages or [default_lang])
     languages.sort()
     LOG.debug(languages)
 
