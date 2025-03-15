@@ -1,12 +1,12 @@
 # Changelog
 
-## [0.1.2a1](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.2a1) (2025-01-15)
+## [0.1.4a1](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.4a1) (2025-03-15)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.1...0.1.2a1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.3...0.1.4a1)
 
 **Merged pull requests:**
 
-- fix:int port [\#26](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/26) ([JarbasAl](https://github.com/JarbasAl))
+- Fix invalid reference in `gradio_app` [\#28](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/28) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
