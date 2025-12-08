@@ -14,6 +14,7 @@ from tempfile import NamedTemporaryFile
 
 from typing import List, Tuple, Optional, Set, Union
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from ovos_config import Configuration
 from ovos_plugin_manager.audio_transformers import load_audio_transformer_plugin, AudioLanguageDetector
@@ -105,6 +106,13 @@ def bytes2audiodata(data: bytes) -> AudioData:
 
 def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
     app = FastAPI()
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     if multi:
         model = MultiModelContainer(stt_plugin, lang_plugin)
     else:
