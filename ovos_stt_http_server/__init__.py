@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
 from tempfile import NamedTemporaryFile
 
 from typing import List, Tuple, Optional, Set, Union
@@ -106,9 +107,11 @@ def bytes2audiodata(data: bytes) -> AudioData:
 
 def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
     app = FastAPI()
+    cors_origins = os.environ.get("CORS_ORIGINS", "*")
+    origins = [origin.strip() for origin in cors_origins.split(",")] if cors_origins != "*" else ["*"]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
