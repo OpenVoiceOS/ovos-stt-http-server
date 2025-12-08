@@ -10,10 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
 from tempfile import NamedTemporaryFile
 
 from typing import List, Tuple, Optional, Set, Union
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from ovos_config import Configuration
 from ovos_plugin_manager.audio_transformers import load_audio_transformer_plugin, AudioLanguageDetector
@@ -105,6 +107,15 @@ def bytes2audiodata(data: bytes) -> AudioData:
 
 def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
     app = FastAPI()
+    cors_origins = os.environ.get("CORS_ORIGINS", "*")
+    origins = [origin.strip() for origin in cors_origins.split(",")] if cors_origins != "*" else ["*"]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     if multi:
         model = MultiModelContainer(stt_plugin, lang_plugin)
     else:
