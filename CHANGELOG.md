@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.5a3](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.5a3) (2025-12-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.5a2...0.1.5a3)
+
+**Merged pull requests:**
+
+- Update actions/setup-python action to v6 [\#41](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/41) ([renovate[bot]](https://github.com/apps/renovate))
+- Update actions/checkout action to v6 [\#38](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/38) ([renovate[bot]](https://github.com/apps/renovate))
+- Update dependency python to 3.14 [\#37](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/37) ([renovate[bot]](https://github.com/apps/renovate))
+
 ## [0.1.5a2](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.5a2) (2025-12-18)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.5a1...0.1.5a2)
