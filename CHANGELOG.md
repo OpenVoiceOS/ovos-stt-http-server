@@ -1,8 +1,16 @@
 # Changelog
 
+## [0.1.5a4](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.5a4) (2025-12-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.5a3...0.1.5a4)
+
 ## [0.1.5a3](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.5a3) (2025-12-18)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.5a2...0.1.5a3)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.5a5...0.1.5a3)
+
+## [0.1.5a5](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.5a5) (2025-12-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.5a2...0.1.5a5)
 
 **Merged pull requests:**
 
