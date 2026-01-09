@@ -47,7 +47,7 @@ def get_version():
 setup(
     name='ovos-stt-http-server',
     version=get_version(),
-    description='simple aiohttp server to host OpenVoiceOS stt plugins as a service',
+    description='simple fastapi server to host OpenVoiceOS stt plugins as a service',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/OpenVoiceOS/ovos-stt-http-server',
@@ -61,19 +61,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'Topic :: Text Processing :: Linguistic',
         'License :: OSI Approved :: Apache Software License',
-
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.0',
-        'Programming Language :: Python :: 3.1',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
     ],
     keywords='plugin STT OVOS OpenVoiceOS',
     entry_points={

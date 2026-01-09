@@ -20,8 +20,8 @@ from fastapi.responses import PlainTextResponse
 from ovos_config import Configuration
 from ovos_plugin_manager.audio_transformers import load_audio_transformer_plugin, AudioLanguageDetector
 from ovos_plugin_manager.stt import load_stt_plugin
+from ovos_plugin_manager.utils.audio import AudioFile, AudioData
 from ovos_utils.log import LOG
-from speech_recognition import AudioData, Recognizer, AudioFile
 from starlette.requests import Request
 
 LOG.set_level("ERROR")  # avoid server side logs
@@ -96,15 +96,6 @@ class MultiModelContainer:
         return engine.execute(audio, language=lang) or ""
 
 
-def bytes2audiodata(data: bytes) -> AudioData:
-    recognizer = Recognizer()
-    with NamedTemporaryFile() as fp:
-        fp.write(data)
-        with AudioFile(fp.name) as source:
-            audio = recognizer.record(source)
-    return audio
-
-
 def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
     app = FastAPI()
     cors_origins = os.environ.get("CORS_ORIGINS", "*")
@@ -131,8 +122,10 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
     @app.post("/stt", response_class=PlainTextResponse)
     async def get_stt(request: Request):
         lang = str(request.query_params.get("lang", Configuration().get("lang", "auto"))).lower()
+        sr = request.query_params.get("sample_rate", 16000)
+        sw = request.query_params.get("sample_width", 2)
         audio_bytes = await request.body()
-        audio = bytes2audiodata(audio_bytes)
+        audio = AudioData(audio_bytes, sr, sw)
         if lang == "auto":
             lang, prob = model.detect_language(audio_bytes)
         return model.process_audio(audio, lang)

@@ -3,16 +3,17 @@ import gradio as gr
 
 from os.path import join, dirname, basename, splitext, isfile
 from ovos_utils.log import LOG
-from ovos_stt_http_server import ModelContainer, bytes2audiodata
+from ovos_stt_http_server import ModelContainer
+from ovos_plugin_manager.utils.audio import AudioData
 
 STT = None
 
 
-def transcribe(audio_file, language: str):
+def transcribe(audio_file, language: str, sample_rate: int = 16000, sample_width: int = 2):
     try:
         with open(audio_file, 'rb') as f:
             audio = f.read()
-        return STT.process_audio(bytes2audiodata(audio), language)
+        return STT.process_audio(AudioData(audio, sample_rate, sample_width), language)
     except TypeError:
         LOG.error(f"Requested file not valid: {audio_file}")
     except FileNotFoundError:
@@ -22,6 +23,7 @@ def bind_gradio_service(app, stt_engine: ModelContainer,
                         title, description, info, badge,
                         default_lang="en", cache=True):
     global STT
+    LOG.warning("gradio interface is deprecated and will be removed in a follow up release")
     STT = stt_engine
     languages = list(stt_engine.engine.available_languages or [default_lang])
     languages.sort()
