@@ -34,21 +34,21 @@ def bind_gradio_service(app, stt_engine: ModelContainer,
                         title, description, info, badge,
                         default_lang="en", cache=True):
     """
-                        Create and mount a Gradio-based transcription UI at /gradio using the provided STT engine.
-                        
-                        Initializes the module STT with the given ModelContainer, prepares available language choices and example audio files, constructs a Gradio Interface configured to call the transcribe function, and mounts that interface to the supplied app at path "/gradio". This function logs a deprecation warning for the Gradio interface.
-                        
-                        Parameters:
-                            app: The web application or framework instance to which the Gradio interface will be mounted.
-                            stt_engine (ModelContainer): Speech-to-text engine container used to perform transcriptions and to obtain available languages.
-                            title (str): Title to display in the Gradio UI.
-                            description (str): Short description shown in the Gradio UI.
-                            info (str): Additional informational HTML or text displayed in the Gradio UI article section.
-                            badge: UI badge metadata (present for API compatibility; not used by this function).
-                            default_lang (str): Preferred default language code; if not available it will be adjusted or replaced with the first available language.
-                            cache (bool): Whether to cache example executions to speed up runtime after initial initialization.
-                        """
-                        global STT
+    Create and mount a Gradio-based transcription UI at /gradio using the provided STT engine.
+    
+    Initializes the module STT with the given ModelContainer, prepares available language choices and example audio files, constructs a Gradio Interface configured to call the transcribe function, and mounts that interface to the supplied app at path "/gradio". This function logs a deprecation warning for the Gradio interface.
+    
+    Parameters:
+        app: The web application or framework instance to which the Gradio interface will be mounted.
+        stt_engine (ModelContainer): Speech-to-text engine container used to perform transcriptions and to obtain available languages.
+        title (str): Title to display in the Gradio UI.
+        description (str): Short description shown in the Gradio UI.
+        info (str): Additional informational HTML or text displayed in the Gradio UI article section.
+        badge: UI badge metadata (present for API compatibility; not used by this function).
+        default_lang (str): Preferred default language code; if not available it will be adjusted or replaced with the first available language.
+        cache (bool): Whether to cache example executions to speed up runtime after initial initialization.
+    """
+    global STT
     LOG.warning("gradio interface is deprecated and will be removed in a follow up release")
     STT = stt_engine
     languages = list(stt_engine.engine.available_languages or [default_lang])
