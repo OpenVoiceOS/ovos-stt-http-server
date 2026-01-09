@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5a10](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.5a10) (2026-01-09)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.5a8...0.1.5a10)
+
+**Closed issues:**
+
+- ffmpeg requirement? [\#44](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/44)
+
 ## [0.1.5a8](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.5a8) (2026-01-09)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.5a7...0.1.5a8)
