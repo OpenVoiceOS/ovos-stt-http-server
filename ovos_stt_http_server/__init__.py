@@ -161,8 +161,8 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
             str: Transcribed text from the provided audio, or an empty string if no transcription is produced.
         """
         lang = str(request.query_params.get("lang", Configuration().get("lang", "auto"))).lower()
-        sr = int(request.query_params.get("sample_rate", 16000))
-        sw = int(request.query_params.get("sample_width", 2))
+        sr = request.query_params.get("sample_rate", 16000)
+        sw = request.query_params.get("sample_width", 2)
         audio_bytes = await request.body()
         audio = AudioData(audio_bytes, sr, sw)
         if lang == "auto":

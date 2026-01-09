@@ -9,18 +9,6 @@ STT = None
 
 
 def transcribe(audio_file, language: str, sample_rate: int = 16000, sample_width: int = 2):
-    """
-    Transcribe an audio file into text using the configured STT engine.
-    
-    Parameters:
-        audio_file (str): Path to the audio file to transcribe.
-        language (str): Language code to use for transcription.
-        sample_rate (int): Sample rate in Hz for the provided audio (default 16000).
-        sample_width (int): Sample width in bytes for the provided audio (default 2).
-    
-    Returns:
-        transcription (str): The transcribed text, or `None` if the file is missing or invalid.
-    """
     try:
         with open(audio_file, 'rb') as f:
             audio = f.read()
