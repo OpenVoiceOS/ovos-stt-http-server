@@ -20,8 +20,8 @@ from fastapi.responses import PlainTextResponse
 from ovos_config import Configuration
 from ovos_plugin_manager.audio_transformers import load_audio_transformer_plugin, AudioLanguageDetector
 from ovos_plugin_manager.stt import load_stt_plugin
+from ovos_plugin_manager.utils.audio import AudioFile, AudioData
 from ovos_utils.log import LOG
-from speech_recognition import AudioData, Recognizer, AudioFile
 from starlette.requests import Request
 
 LOG.set_level("ERROR")  # avoid server side logs
@@ -92,20 +92,38 @@ class MultiModelContainer:
             self.engines.pop(lang)
 
     def process_audio(self, audio: AudioData, lang: str):
+        """
+        Transcribes the provided audio using the engine for the specified language.
+        
+        Parameters:
+            audio (AudioData): Audio content to transcribe.
+            lang (str): Language code identifying which engine to use.
+        
+        Returns:
+            str: Transcribed text for the audio, or an empty string if no transcription is produced.
+        """
         engine = self.get_engine(lang)
         return engine.execute(audio, language=lang) or ""
 
 
-def bytes2audiodata(data: bytes) -> AudioData:
-    recognizer = Recognizer()
-    with NamedTemporaryFile() as fp:
-        fp.write(data)
-        with AudioFile(fp.name) as source:
-            audio = recognizer.record(source)
-    return audio
-
-
 def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
+    """
+    Create and configure a FastAPI app that exposes STT and language-detection endpoints and returns the app with its model container.
+    
+    Configures CORS origins from the CORS_ORIGINS environment variable, initializes either a single-model or multi-model container using the provided plugins, and registers three endpoints:
+    - GET /status: returns service and plugin metadata.
+    - POST /stt: accepts raw audio bytes in the request body (query params: `lang`, `sample_rate`, `sample_width`), optionally performs language detection when `lang=auto`, and returns transcribed text.
+    - POST /lang_detect: accepts raw audio bytes and returns detected language and confidence (supports `valid_langs` query param).
+    
+    Parameters:
+        stt_plugin (str): Name or identifier of the STT plugin to load.
+        lang_plugin (str, optional): Name or identifier of an optional language-detection plugin. Defaults to None.
+        multi (bool, optional): If True, use a MultiModelContainer (one engine per language); otherwise use a single ModelContainer. Defaults to False.
+        has_gradio (bool, optional): Flag included in the /status response indicating whether a Gradio UI is available. Defaults to False.
+    
+    Returns:
+        tuple: (app, model) where `app` is the configured FastAPI application and `model` is the initialized ModelContainer or MultiModelContainer instance.
+    """
     app = FastAPI()
     cors_origins = os.environ.get("CORS_ORIGINS", "*")
     origins = [origin.strip() for origin in cors_origins.split(",")] if cors_origins != "*" else ["*"]
@@ -130,9 +148,23 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
 
     @app.post("/stt", response_class=PlainTextResponse)
     async def get_stt(request: Request):
+        """
+        Handle an STT request: read audio from the request body, determine language if requested, and return the transcription.
+        
+        Parameters:
+            request (Request): HTTP request whose body contains raw audio bytes. Query parameters:
+                - lang: language code or "auto" (default from Configuration().get("lang", "auto")).
+                - sample_rate: sample rate in Hz for the audio (default 16000).
+                - sample_width: sample width in bytes (default 2).
+        
+        Returns:
+            str: Transcribed text from the provided audio, or an empty string if no transcription is produced.
+        """
         lang = str(request.query_params.get("lang", Configuration().get("lang", "auto"))).lower()
+        sr = int(request.query_params.get("sample_rate", 16000))
+        sw = int(request.query_params.get("sample_width", 2))
         audio_bytes = await request.body()
-        audio = bytes2audiodata(audio_bytes)
+        audio = AudioData(audio_bytes, sr, sw)
         if lang == "auto":
             lang, prob = model.detect_language(audio_bytes)
         return model.process_audio(audio, lang)
