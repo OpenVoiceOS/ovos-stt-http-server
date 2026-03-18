@@ -9,8 +9,12 @@
 | | `MultiModelContainer` — `ovos_stt_http_server/__init__.py:57` |
 | **Key functions** | `create_app()` — `ovos_stt_http_server/__init__.py:109` |
 | | `start_stt_server()` — `ovos_stt_http_server/__init__.py:184` |
-| **Endpoints** | `GET /status`, `POST /stt`, `POST /lang_detect` |
-| **Audio format** | PCM 16 kHz mono int16 |
+| | `multipart_audio_to_audiodata()` — `ovos_stt_http_server/audio_utils.py:10` |
+| **Native endpoints** | `GET /status`, `POST /stt`, `POST /lang_detect` |
+| **API prefixes** | `/openai`, `/deepgram`, `/google`, `/assemblyai/v2`, `/speechmatics/v1` |
+| **Audio format** | PCM 16 kHz mono int16 (native); WAV/MP3/OGG via compat routers |
 | **CORS** | Unconditional `allow_origins=["*"]` |
+| **Default port** | `8080` |
 | **Python** | >=3.9 |
 | **License** | Apache-2.0 |
+| **Unit tests** | 25 tests — `test/unittests/test_compat_routers.py` |
