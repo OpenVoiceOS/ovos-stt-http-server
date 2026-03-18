@@ -177,6 +177,18 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
         lang, prob = model.detect_language(audio_bytes, valid_langs=valid)
         return {"lang": lang, "conf": prob}
 
+    from ovos_stt_http_server.routers.openai_whisper import make_openai_whisper_router
+    from ovos_stt_http_server.routers.deepgram import make_deepgram_router
+    from ovos_stt_http_server.routers.google_stt import make_google_stt_router
+    from ovos_stt_http_server.routers.assemblyai import make_assemblyai_router
+    from ovos_stt_http_server.routers.speechmatics import make_speechmatics_router
+
+    app.include_router(make_openai_whisper_router(model))
+    app.include_router(make_deepgram_router(model))
+    app.include_router(make_google_stt_router(model))
+    app.include_router(make_assemblyai_router(model))
+    app.include_router(make_speechmatics_router(model))
+
     return app, model
 
 
