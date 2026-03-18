@@ -262,3 +262,128 @@ class TestSpeechmaticsRouter:
     def test_get_missing_job_transcript(self, client):
         resp = client.get("/speechmatics/v1/jobs/nonexistent/transcript")
         assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Additional tests (8 new) covering edge cases
+# ---------------------------------------------------------------------------
+
+class TestWhisperResponseFormats:
+    """Additional Whisper response_format edge-case tests."""
+
+    def test_response_format_text_is_plain_text(self, client, wav_bytes):
+        """response_format=text must return Content-Type text/plain, not JSON."""
+        resp = client.post(
+            "/openai/v1/audio/transcriptions",
+            files={"file": ("audio.wav", wav_bytes, "audio/wav")},
+            data={"model": "whisper-1", "response_format": "text"},
+        )
+        assert resp.status_code == 200
+        # Must NOT be a JSON object
+        assert resp.text.strip() == "hello world"
+        assert "text/plain" in resp.headers["content-type"]
+
+    def test_response_format_verbose_json_has_segments_field(self, client, wav_bytes):
+        """verbose_json response must contain a 'segments' key (may be empty list)."""
+        resp = client.post(
+            "/openai/v1/audio/transcriptions",
+            files={"file": ("audio.wav", wav_bytes, "audio/wav")},
+            data={"model": "whisper-1", "response_format": "verbose_json"},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "segments" in body
+        assert isinstance(body["segments"], list)
+
+    def test_translations_endpoint_forces_lang_en(self, client, wav_bytes):
+        """Translations endpoint must set task=translate and language=en in verbose_json."""
+        resp = client.post(
+            "/openai/v1/audio/translations",
+            files={"file": ("audio.wav", wav_bytes, "audio/wav")},
+            data={"model": "whisper-1", "response_format": "verbose_json"},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["task"] == "translate"
+        assert body["language"] == "en"
+
+
+class TestDeepgramEdgeCases:
+    """Additional Deepgram router edge-case tests."""
+
+    def test_listen_with_punctuate_param_ignored(self, client, wav_bytes):
+        """?punctuate=true is accepted and ignored; transcript is still returned."""
+        resp = client.post(
+            "/deepgram/v1/listen?punctuate=true",
+            content=wav_bytes,
+            headers={"Content-Type": "audio/wav"},
+        )
+        assert resp.status_code == 200
+        alt = resp.json()["results"]["channels"][0]["alternatives"][0]
+        assert alt["transcript"] == "hello world"
+
+
+class TestGoogleSTTEdgeCases:
+    """Additional Google STT router edge-case tests."""
+
+    def test_recognize_with_base64_wav(self, client, wav_b64):
+        """Explicit test that base64-encoded WAV bytes are decoded and transcribed."""
+        resp = client.post(
+            "/google/v1/speech:recognize",
+            json={
+                "config": {
+                    "encoding": "LINEAR16",
+                    "sampleRateHertz": 16000,
+                    "languageCode": "en-US",
+                },
+                "audio": {"content": wav_b64},
+            },
+        )
+        assert resp.status_code == 200
+        result = resp.json()["results"][0]
+        assert result["alternatives"][0]["transcript"] == "hello world"
+        assert result["alternatives"][0]["confidence"] == pytest.approx(0.9, abs=0.01)
+
+
+class TestAssemblyAIEdgeCases:
+    """Additional AssemblyAI router edge-case tests."""
+
+    def test_get_transcript_always_has_status_field(self, client, wav_b64):
+        """GET by any ID must always return a JSON body with a 'status' key."""
+        create = client.post("/assemblyai/v2/transcript", json={"audio": wav_b64})
+        tid = create.json()["id"]
+        get_resp = client.get(f"/assemblyai/v2/transcript/{tid}")
+        assert get_resp.status_code == 200
+        body = get_resp.json()
+        assert "status" in body
+
+
+class TestSpeechmaticsEdgeCases:
+    """Additional Speechmatics router edge-case tests."""
+
+    def test_get_unknown_job_id_returns_404(self, client):
+        """A job ID that was never created must return HTTP 404."""
+        resp = client.get("/speechmatics/v1/jobs/totally-unknown-id-xyz/transcript")
+        assert resp.status_code == 404
+
+    def test_get_known_job_id_returns_transcript(self, client, wav_bytes):
+        """A job ID from a successful POST must return 200 with transcript text."""
+        create = client.post(
+            "/speechmatics/v1/jobs",
+            files={"data_file": ("audio.wav", wav_bytes, "audio/wav")},
+            data={
+                "config": json.dumps(
+                    {"type": "transcription", "transcription_config": {"language": "en"}}
+                )
+            },
+        )
+        assert create.status_code == 200
+        job_id = create.json()["id"]
+
+        resp = client.get(f"/speechmatics/v1/jobs/{job_id}/transcript")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "results" in body
+        # transcript content should appear in alternatives
+        if body["results"]:
+            assert body["results"][0]["alternatives"][0]["content"] == "hello world"
