@@ -52,7 +52,7 @@ class DeepgramResponse(BaseModel):
 
 def make_deepgram_router(model) -> APIRouter:
     """Create Deepgram-compatible router."""
-    router = APIRouter(tags=["deepgram"])
+    router = APIRouter(prefix="/deepgram", tags=["deepgram"])
 
     @router.post("/v1/listen", response_model=DeepgramResponse)
     async def listen(

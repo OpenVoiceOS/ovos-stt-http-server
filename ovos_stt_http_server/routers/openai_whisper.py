@@ -37,7 +37,7 @@ def make_openai_whisper_router(model) -> APIRouter:
     Returns:
         Configured APIRouter with OpenAI-compatible transcription endpoints.
     """
-    router = APIRouter(tags=["openai-whisper"])
+    router = APIRouter(prefix="/openai", tags=["openai-whisper"])
 
     async def _transcribe(
             file: UploadFile,

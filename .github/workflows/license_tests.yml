@@ -1,12 +1,15 @@
 name: Run License Tests
 on:
   push:
-  workflow_dispatch:
-  pull_request:
     branches:
       - master
+  pull_request:
+    branches:
+      - dev
+  workflow_dispatch:
+
 jobs:
   license_tests:
-    uses: neongeckocom/.github/.github/workflows/license_tests.yml@master
+    uses: OpenVoiceOS/gh-automations/.github/workflows/license-check.yml@dev
     with:
-      packages-exclude: '^(tqdm|bs4|gradio|bitstruct|attrs|referencing).*'
+      exclude_packages: '^(tqdm|bs4|gradio|bitstruct|attrs|referencing).*'

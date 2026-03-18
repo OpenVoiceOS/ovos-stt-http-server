@@ -50,7 +50,7 @@ class GoogleSTTResponse(BaseModel):
 
 def make_google_stt_router(model) -> APIRouter:
     """Create Google Cloud STT-compatible router."""
-    router = APIRouter(tags=["google-stt"])
+    router = APIRouter(prefix="/google", tags=["google-stt"])
 
     @router.post("/v1/speech:recognize", response_model=GoogleSTTResponse)
     def recognize(

@@ -46,7 +46,7 @@ class AssemblyAITranscript(BaseModel):
 
 def make_assemblyai_router(model) -> APIRouter:
     """Create AssemblyAI-compatible router (synchronous stub)."""
-    router = APIRouter(prefix="/v2", tags=["assemblyai"])
+    router = APIRouter(prefix="/assemblyai/v2", tags=["assemblyai"])
 
     @router.post("/transcript", response_model=AssemblyAITranscript)
     def create_transcript(

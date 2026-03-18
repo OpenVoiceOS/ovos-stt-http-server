@@ -52,7 +52,7 @@ class SpeechmaticsTranscriptResponse(BaseModel):
 
 def make_speechmatics_router(model) -> APIRouter:
     """Create Speechmatics-compatible router (synchronous stub)."""
-    router = APIRouter(prefix="/v1", tags=["speechmatics"])
+    router = APIRouter(prefix="/speechmatics/v1", tags=["speechmatics"])
 
     @router.post("/jobs", response_model=SpeechmaticsJobResponse)
     async def create_job(
