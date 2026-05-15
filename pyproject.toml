@@ -50,3 +50,11 @@ include = ["ovos_stt_http_server*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "ovos_stt_http_server.version.__version__"}
+
+[tool.coverage.run]
+source = ["ovos_stt_http_server"]
+omit = [
+    "test/*",
+    "*/proto/*_pb2.py",
+    "*/proto/*_pb2_grpc.py",
+]
