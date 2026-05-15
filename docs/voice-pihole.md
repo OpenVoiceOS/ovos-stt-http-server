@@ -389,3 +389,45 @@ A complete "voice pihole" deployment is:
 Once the DNS rewrite + TLS cert + reverse proxy are in place, **every**
 consumer app on the LAN that uses any of the above APIs is automatically
 served by your local OVOS plugin — no client-side change required.
+
+### faster-whisper-server (`api.fasterwhisper.local`, OpenAI-compatible)
+
+[`fedirz/faster-whisper-server`](https://github.com/fedirz/faster-whisper-server)
+ships an OpenAI-shape `/v1/audio/transcriptions` endpoint. Apps that target
+a deployment of it — typically on a self-chosen hostname like
+`api.fasterwhisper.local` or just a LAN IP — drop in directly by pointing
+their `base_url` at our `/openai/v1` prefix.
+
+There is no router code on our side because PR #53's `/openai` router
+already speaks the exact contract. If you're swapping out a running
+faster-whisper-server instance:
+
+```bash
+# Stop the old container
+docker stop faster-whisper-server
+
+# Start ovos-stt-http-server on the same port
+ovos-stt-server --engine ovos-stt-plugin-fasterwhisper --port 8000
+```
+
+Apps using `base_url="http://your-host:8000/v1/"` keep working — except
+your audio is now transcribed by whichever OVOS STT plugin you loaded
+(which can be faster-whisper, whisper.cpp, vosk, or anything else).
+
+If you need to intercept a hostname your apps already point at:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name api.fasterwhisper.local;
+    ssl_certificate     /etc/ssl/private/api.fasterwhisper.local.crt;
+    ssl_certificate_key /etc/ssl/private/api.fasterwhisper.local.key;
+
+    location /v1/audio/ {
+        proxy_pass         http://127.0.0.1:8080/openai/v1/audio/;
+        proxy_set_header   Host $host;
+        proxy_buffering    off;
+    }
+    location / { return 404; }
+}
+```
