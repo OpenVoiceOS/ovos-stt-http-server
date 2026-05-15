@@ -24,53 +24,62 @@ when it doesn't need to pretend to be someone else.
 ## Compat coverage matrix
 
 Each row is one compat surface — one router (or process-side bridge) plus
-its docs, examples, and live tests. The **PR** column links to the
-in-flight PR; once a row's PR is merged, the per-vendor docs live inline
-in [`api-compatibility.md`](api-compatibility.md).
+its docs, examples, and live tests. **Status legend:**
+
+- ✅ **merged** — landed on `dev`; full per-vendor docs live inline in
+  [`api-compatibility.md`](api-compatibility.md).
+- 🟡 **open** — PR is up; full per-vendor docs live on the feature branch
+  until merge.
+- ⚪ **planned** — see the [TODO / WIP](#todo--wip) section below.
 
 ### Foundation
 
 | Branch | Status | PR |
 | :--- | :--- | :--- |
-| `modernize-base` — gradio drop, CORSMiddleware, audio_utils, shared workflows, unit test scaffolding (≥90% coverage) | shipped | [#52](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/52) |
-| `docs/voice-pihole-hub` — this hub itself | shipped | [#70](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/70) |
+| `modernize-base` — gradio drop, CORSMiddleware, audio_utils, shared workflows, unit test scaffolding (≥90% coverage) | ✅ merged | [#52](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/52) |
+| `docs/voice-pihole-hub` — this hub itself | 🟡 open | [#70](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/70) |
 
 ### Commercial cloud STT
 
 | Vendor | Prefix(es) | Status | PR |
 | :--- | :--- | :--- | :--- |
-| OpenAI Whisper | `/openai/v1/audio/*` | shipped | [#53](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/53) |
-| Deepgram | `/deepgram/v1/listen` (HTTP + WS) | shipped | [#54](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/54) |
-| Google Cloud STT | `/google/v1/speech:recognize` | shipped | [#55](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/55) |
-| AssemblyAI | `/assemblyai/v2/{upload,transcript,realtime/ws}` | shipped | [#56](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/56) |
-| Speechmatics | `/speechmatics/v1/{jobs*, ""}` (REST + WS) | shipped | [#57](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/57) |
-| Microsoft Azure Speech | `/azure-stt/cognitiveservices/v1` (REST + WS) | shipped | [#58](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/58) |
-| AWS Transcribe | `/aws/transcribe` (batch + streaming WS) | shipped | [#60](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/60) |
-| IBM Watson STT | `/watson/speech-to-text/v1/recognize` (REST + WS) | shipped | [#61](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/61) |
-| Wit.ai (Meta) | `/wit/speech` | shipped | [#62](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/62) |
-| Chromium Web Speech | `/speech-api/v2/recognize` | shipped | [#68](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/68) |
+| OpenAI Whisper | `/openai/v1/audio/*` | 🟡 open | [#53](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/53) |
+| Deepgram | `/deepgram/v1/listen` (HTTP + WS) | 🟡 open | [#54](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/54) |
+| Google Cloud STT | `/google/v1/speech:recognize` | 🟡 open | [#55](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/55) |
+| AssemblyAI | `/assemblyai/v2/{upload,transcript,realtime/ws}` | 🟡 open | [#56](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/56) |
+| Speechmatics | `/speechmatics/v1/{jobs*, ""}` (REST + WS) | 🟡 open | [#57](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/57) |
+| Microsoft Azure Speech | `/azure-stt/cognitiveservices/v1` (REST + WS) | 🟡 open | [#58](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/58) |
+| AWS Transcribe | `/aws/transcribe` (batch + streaming WS) | 🟡 open | [#60](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/60) |
+| IBM Watson STT | `/watson/speech-to-text/v1/recognize` (REST + WS) | 🟡 open | [#61](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/61) |
+| Wit.ai (Meta) | `/wit/speech` | 🟡 open | [#62](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/62) |
+| Chromium Web Speech | `/speech-api/v2/recognize` | 🟡 open | [#68](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/68) |
 
 ### Self-hosted / open-source server protocols
 
 | Server | Prefix / surface | Status | PR |
 | :--- | :--- | :--- | :--- |
-| vosk-server (WebSocket) | `/vosk` | shipped | [#63](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/63) |
-| vosk-server (gRPC) | `--vosk-grpc-port` opt-in | shipped | [#65](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/65) |
-| vosk-server (WebRTC) | `/vosk-webrtc/offer` (opt-in extra) | shipped | [#66](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/66) |
-| vosk-server (MQTT) | `--vosk-mqtt-broker` opt-in | shipped | [#67](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/67) |
-| kaldi-gstreamer-server | `/client/ws/speech` + `/client/dynamic/recognize` | shipped | [#69](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/69) |
-| whisper.cpp HTTP server | `/whisper-cpp/inference` | shipped | [#64](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/64) |
-| faster-whisper-server | re-uses `/openai/v1` | docs only | [#72](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/72) |
-| Wyoming (HA) | external adapter — see [wyoming-integration.md](wyoming-integration.md) | adapter only | [#59](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/59) |
+| vosk-server (WebSocket) | `/vosk` | 🟡 open | [#63](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/63) |
+| vosk-server (gRPC) | `--vosk-grpc-port` opt-in | 🟡 open | [#65](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/65) |
+| vosk-server (WebRTC) | `/vosk-webrtc/offer` (opt-in extra) | 🟡 open | [#66](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/66) |
+| vosk-server (MQTT) | `--vosk-mqtt-broker` opt-in | 🟡 open | [#67](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/67) |
+| kaldi-gstreamer-server | `/client/ws/speech` + `/client/dynamic/recognize` | 🟡 open | [#69](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/69) |
+| whisper.cpp HTTP server | `/whisper-cpp/inference` | 🟡 open | [#64](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/64) |
+| faster-whisper-server | re-uses `/openai/v1` | 🟡 open (docs only) | [#72](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/72) |
+| Wyoming (HA) | external adapter — see [wyoming-integration.md](wyoming-integration.md) | ✅ merged (adapter docs) | [#59](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/59) |
 
 ### OpenAI-shape Whisper hosts (Tier 2 — no router code)
 
 | Host | Status | PR |
 | :--- | :--- | :--- |
-| Groq, Cloudflare Workers AI, Fireworks AI, Together AI, OpenRouter | docs only | [#71](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/71) |
+| Groq, Cloudflare Workers AI, Fireworks AI, Together AI, OpenRouter | 🟡 open (docs only) | [#71](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/71) |
 
 Apps targeting these hosts already speak the OpenAI `/v1/audio/transcriptions`
 contract — point them at our `/openai/v1` prefix.
+
+> :information_source: Status is updated on PR merge. Until a PR lands,
+> its per-vendor docs section lives on the feature branch — click the PR
+> link to read it. The status here reflects merge-into-`dev`, not local
+> implementation completeness.
 
 ## Voice-pihole concept
 
