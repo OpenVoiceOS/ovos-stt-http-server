@@ -6,6 +6,7 @@
 
 **Merged pull requests:**
 
+- docs: Wyoming integration via TigreGotico adapter repos [\#59](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/59) ([JarbasAl](https://github.com/JarbasAl))
 - feat: modernize foundation \(no compat endpoints\) [\#52](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/52) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.1.5a10](https://github.com/OpenVoiceOS/ovos-stt-http-server/tree/0.1.5a10) (2026-01-09)
