@@ -20,13 +20,6 @@ this box** instead of a third-party cloud.
 - 🟡 **open** — PR up; per-vendor docs on the feature branch.
 - ⚪ **planned** — see [TODO / WIP](#todo--wip).
 
-### Foundation
-
-| Branch | Status | PR |
-| :--- | :--- | :--- |
-| `modernize-base` | ✅ merged | [#52](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/52) |
-| `docs/voice-pihole-hub` | 🟡 open | [#70](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/70) |
-
 ### Commercial cloud STT
 
 | Vendor | Prefix | Status | PR |
@@ -98,15 +91,3 @@ Needed:
   a plain WS surface; SDK-level apps that bypass WS need a translator.
 - **vosk gRPC `StatsService`** — second proto service in #65's vendored
   `.proto` not implemented.
-
-### Documentation TODOs
-
-- One-pager per use-case (Raspberry Pi, Tailscale, Caddy).
-- mkcert / step-ca walkthrough.
-- Per-vendor migration guide (SDK → drop-in mode).
-
-### Process
-
-Once #70 lands, every open compat PR rebases on `dev` and in its diff:
-1. Removes its row's PR link from the index in `api-compatibility.md`.
-2. Inlines its full per-vendor docs section.
