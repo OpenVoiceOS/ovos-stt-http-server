@@ -122,7 +122,7 @@ def _load_translator(translate_plugin):
     })
 
 
-def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False,
+def create_app(stt_plugin, lang_plugin=None, multi=False,
                translate_plugin=None):
     """
     Create and configure a FastAPI app that exposes STT and language-detection endpoints and returns the app with its model container.
@@ -136,7 +136,7 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False,
         stt_plugin (str): Name or identifier of the STT plugin to load.
         lang_plugin (str, optional): Name or identifier of an optional language-detection plugin. Defaults to None.
         multi (bool, optional): If True, use a MultiModelContainer (one engine per language); otherwise use a single ModelContainer. Defaults to False.
-        has_gradio (bool, optional): Flag included in the /status response indicating whether a Gradio UI is available. Defaults to False.
+        translate_plugin (str, optional): OVOS translation plugin name for /openai/v1/audio/translations.
     
     Returns:
         tuple: (app, model) where `app` is the configured FastAPI application and `model` is the initialized ModelContainer or MultiModelContainer instance.
@@ -160,8 +160,7 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False,
     def stats(request: Request):
         return {"status": "ok",
                 "plugin": stt_plugin,
-                "lang_plugin": lang_plugin,
-                "gradio": has_gradio}
+                "lang_plugin": lang_plugin}
 
     @app.post("/stt", response_class=PlainTextResponse)
     async def get_stt(request: Request):
@@ -206,8 +205,7 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False,
 def start_stt_server(engine: str,
                      lang_engine: str = None,
                      multi: bool = False,
-                     has_gradio: bool = False,
                      translate_plugin: str = None) -> (FastAPI, ModelContainer):
-    app, engine = create_app(engine, lang_engine, multi, has_gradio,
+    app, engine = create_app(engine, lang_engine, multi,
                              translate_plugin=translate_plugin)
     return app, engine

@@ -16,8 +16,8 @@ def test_main_runs(monkeypatch):
     from ovos_stt_http_server import __main__
     calls = {}
 
-    def fake_start(engine, lang_engine=None, multi=False):
-        calls["start"] = (engine, lang_engine, multi)
+    def fake_start(engine, lang_engine=None, multi=False, translate_plugin=None):
+        calls["start"] = (engine, lang_engine, multi, translate_plugin)
         return ("app-obj", "model-obj")
 
     def fake_run(server, host, port):
@@ -30,5 +30,5 @@ def test_main_runs(monkeypatch):
         ["ovos-stt-server", "--engine", "fake", "--port", "1234", "--multi"],
     )
     __main__.main()
-    assert calls["start"] == ("fake", None, True)
+    assert calls["start"] == ("fake", None, True, "ovos-translate-plugin-server")
     assert calls["run"] == ("app-obj", "0.0.0.0", 1234)
