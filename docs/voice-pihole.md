@@ -346,6 +346,130 @@ server {
 }
 ```
 
+### OpenAI-compatible Whisper hosts (Tier 2)
+
+These hosts all implement OpenAI's `/v1/audio/transcriptions` contract.
+No new router code is needed — apps that target them point at our
+`/openai/v1` prefix and work unchanged. Each just needs a DNS entry +
+nginx block matching its specific upstream path layout.
+
+#### Groq (`api.groq.com`)
+
+Path is identical to OpenAI's:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name api.groq.com;
+    ssl_certificate     /etc/ssl/private/api.groq.com.crt;
+    ssl_certificate_key /etc/ssl/private/api.groq.com.key;
+
+    location /openai/v1/audio/ {
+        proxy_pass         http://127.0.0.1:8080/openai/v1/audio/;
+        proxy_set_header   Host $host;
+        proxy_buffering    off;
+    }
+    # Some SDKs probe the chat path; return a benign 404 unless you also
+    # proxy chat to a local LLM.
+    location / { return 404; }
+}
+```
+
+(Groq SDKs use `/openai/v1/audio/transcriptions` directly — same path as
+ours.)
+
+#### Cloudflare Workers AI (`api.cloudflare.com`)
+
+Cloudflare wraps Whisper at
+`/client/v4/accounts/{account_id}/ai/run/@cf/openai/whisper`. nginx rewrites
+the deep path:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name api.cloudflare.com;
+    ssl_certificate     /etc/ssl/private/api.cloudflare.com.crt;
+    ssl_certificate_key /etc/ssl/private/api.cloudflare.com.key;
+
+    location ~ ^/client/v4/accounts/[^/]+/ai/run/@cf/openai/whisper$ {
+        # Cloudflare uses a raw-audio body; we accept that via the
+        # /openai endpoint's WAV path.
+        proxy_pass         http://127.0.0.1:8080/openai/v1/audio/transcriptions;
+        proxy_set_header   Host $host;
+        proxy_set_header   Content-Type "multipart/form-data";
+        proxy_buffering    off;
+    }
+    location / { return 404; }
+}
+```
+
+> :warning: Cloudflare's Workers AI endpoint accepts **raw audio bytes**,
+> not multipart. Our `/openai/v1/audio/transcriptions` expects multipart;
+> a small Lua/nginx_perl shim — or putting an `mitmproxy` adapter in
+> front — may be needed to repack the body. For most consumer apps the
+> simpler path is to point them at our `/openai/v1` directly via the SDK's
+> `base_url`.
+
+#### Fireworks AI (`api.fireworks.ai`)
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name api.fireworks.ai;
+    ssl_certificate     /etc/ssl/private/api.fireworks.ai.crt;
+    ssl_certificate_key /etc/ssl/private/api.fireworks.ai.key;
+
+    # Inference endpoint matches OpenAI's shape under /inference/v1
+    location /inference/v1/audio/ {
+        proxy_pass         http://127.0.0.1:8080/openai/v1/audio/;
+        proxy_set_header   Host $host;
+        proxy_buffering    off;
+    }
+    location / { return 404; }
+}
+```
+
+#### Together AI (`api.together.xyz`)
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name api.together.xyz;
+    ssl_certificate     /etc/ssl/private/api.together.xyz.crt;
+    ssl_certificate_key /etc/ssl/private/api.together.xyz.key;
+
+    location /v1/audio/ {
+        proxy_pass         http://127.0.0.1:8080/openai/v1/audio/;
+        proxy_set_header   Host $host;
+        proxy_buffering    off;
+    }
+    location / { return 404; }
+}
+```
+
+#### OpenRouter (`openrouter.ai`)
+
+OpenRouter is a multi-provider proxy. Audio support is partial and varies
+per upstream model. Apps that point at OpenRouter's `/api/v1/audio/*`
+shape work the same way:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name openrouter.ai;
+    ssl_certificate     /etc/ssl/private/openrouter.ai.crt;
+    ssl_certificate_key /etc/ssl/private/openrouter.ai.key;
+
+    location /api/v1/audio/ {
+        proxy_pass         http://127.0.0.1:8080/openai/v1/audio/;
+        proxy_set_header   Host $host;
+        proxy_buffering    off;
+    }
+    # Chat / completions / etc. — proxy to your local LLM or 404
+    location / { return 404; }
+}
+```
+
 ---
 
 ## Self-hosted server replacement

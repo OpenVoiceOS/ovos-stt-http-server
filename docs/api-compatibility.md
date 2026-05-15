@@ -51,12 +51,10 @@ Status reflects merge state into `dev`:
 
 ## OpenAI-compatible Whisper hosts
 
-| Hosts | Status | PR |
-| :--- | :--- | :--- |
-| Groq, Cloudflare Workers AI, Fireworks AI, Together AI, OpenRouter | 🟡 open | [#71](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/71) |
-
-Apps targeting these hosts already speak the OpenAI `/v1/audio/transcriptions`
-contract — point them at our `/openai/v1` prefix.
+Groq, Cloudflare Workers AI, Fireworks AI, Together AI, and OpenRouter
+all speak the OpenAI `/v1/audio/transcriptions` contract — point them at
+our `/openai/v1` prefix. Per-host nginx blocks live in
+[`voice-pihole.md`](voice-pihole.md) under the OpenAI section.
 
 ---
 
