@@ -10,9 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import os
-from tempfile import NamedTemporaryFile
-
 from typing import List, Tuple, Optional, Set, Union
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -106,30 +103,31 @@ class MultiModelContainer:
         return engine.execute(audio, language=lang) or ""
 
 
-def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
+def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     """
-    Create and configure a FastAPI app that exposes STT and language-detection endpoints and returns the app with its model container.
-    
-    Configures CORS origins from the CORS_ORIGINS environment variable, initializes either a single-model or multi-model container using the provided plugins, and registers three endpoints:
+    Create and configure a FastAPI app that exposes STT and language-detection endpoints.
+
+    Initializes either a single-model or multi-model container using the provided plugins,
+    and registers three endpoints:
     - GET /status: returns service and plugin metadata.
-    - POST /stt: accepts raw audio bytes in the request body (query params: `lang`, `sample_rate`, `sample_width`), optionally performs language detection when `lang=auto`, and returns transcribed text.
-    - POST /lang_detect: accepts raw audio bytes and returns detected language and confidence (supports `valid_langs` query param).
-    
+    - POST /stt: accepts raw audio bytes (query params: `lang`, `sample_rate`, `sample_width`),
+      optionally performs language detection when `lang=auto`, and returns transcribed text.
+    - POST /lang_detect: accepts raw audio bytes and returns detected language and confidence
+      (supports `valid_langs` query param).
+
     Parameters:
-        stt_plugin (str): Name or identifier of the STT plugin to load.
-        lang_plugin (str, optional): Name or identifier of an optional language-detection plugin. Defaults to None.
-        multi (bool, optional): If True, use a MultiModelContainer (one engine per language); otherwise use a single ModelContainer. Defaults to False.
-        has_gradio (bool, optional): Flag included in the /status response indicating whether a Gradio UI is available. Defaults to False.
-    
+        stt_plugin: Name or identifier of the STT plugin to load.
+        lang_plugin: Name or identifier of an optional language-detection plugin.
+        multi: If True, use a MultiModelContainer (one engine per language).
+
     Returns:
-        tuple: (app, model) where `app` is the configured FastAPI application and `model` is the initialized ModelContainer or MultiModelContainer instance.
+        tuple: (app, model) where `app` is the configured FastAPI application and `model` is
+            the initialized ModelContainer or MultiModelContainer instance.
     """
     app = FastAPI()
-    cors_origins = os.environ.get("CORS_ORIGINS", "*")
-    origins = [origin.strip() for origin in cors_origins.split(",")] if cors_origins != "*" else ["*"]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins,
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -143,8 +141,7 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
     def stats(request: Request):
         return {"status": "ok",
                 "plugin": stt_plugin,
-                "lang_plugin": lang_plugin,
-                "gradio": has_gradio}
+                "lang_plugin": lang_plugin}
 
     @app.post("/stt", response_class=PlainTextResponse)
     async def get_stt(request: Request):
@@ -161,8 +158,8 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
             str: Transcribed text from the provided audio, or an empty string if no transcription is produced.
         """
         lang = str(request.query_params.get("lang", Configuration().get("lang", "auto"))).lower()
-        sr = int(request.query_params.get("sample_rate", 16000))
-        sw = int(request.query_params.get("sample_width", 2))
+        sr = request.query_params.get("sample_rate", 16000)
+        sw = request.query_params.get("sample_width", 2)
         audio_bytes = await request.body()
         audio = AudioData(audio_bytes, sr, sw)
         if lang == "auto":
@@ -183,7 +180,17 @@ def create_app(stt_plugin, lang_plugin=None, multi=False, has_gradio=False):
 
 def start_stt_server(engine: str,
                      lang_engine: str = None,
-                     multi: bool = False,
-                     has_gradio: bool = False) -> (FastAPI, ModelContainer):
-    app, engine = create_app(engine, lang_engine, multi, has_gradio)
+                     multi: bool = False) -> tuple:
+    """
+    Initialize and return a configured FastAPI STT server and its model container.
+
+    Parameters:
+        engine: STT plugin name to load.
+        lang_engine: Optional language-detection plugin name.
+        multi: If True, load one engine per language via MultiModelContainer.
+
+    Returns:
+        tuple: (app, model) — the FastAPI application and the model container.
+    """
+    app, engine = create_app(engine, lang_engine, multi)
     return app, engine
