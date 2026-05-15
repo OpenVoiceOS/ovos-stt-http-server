@@ -26,7 +26,7 @@ dependencies = [
 
 [project.optional-dependencies]
 audio = ["pydub"]
-test = ["pytest", "httpx", "pytest-cov"]
+test = ["pytest", "httpx", "pytest-cov", "python-multipart", "requests"]
 
 [project.urls]
 Homepage = "https://github.com/OpenVoiceOS/ovos-stt-http-server"
