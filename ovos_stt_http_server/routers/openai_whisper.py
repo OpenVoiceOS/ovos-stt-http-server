@@ -95,10 +95,22 @@ def make_openai_whisper_router(model, translator=None) -> APIRouter:
         if response_format == "text":
             return PlainTextResponse(text)
         elif response_format == "srt":
-            srt = f"1\n00:00:00,000 --> 00:00:{int(duration):02d},000\n{text}\n"
+            total = int(duration)
+            hours, rem = divmod(total, 3600)
+            minutes, seconds = divmod(rem, 60)
+            srt = (
+                f"1\n00:00:00,000 --> "
+                f"{hours:02d}:{minutes:02d}:{seconds:02d},000\n{text}\n"
+            )
             return PlainTextResponse(srt)
         elif response_format == "vtt":
-            vtt = f"WEBVTT\n\n00:00:00.000 --> 00:00:{int(duration):02d}.000\n{text}\n"
+            total = int(duration)
+            hours, rem = divmod(total, 3600)
+            minutes, seconds = divmod(rem, 60)
+            vtt = (
+                f"WEBVTT\n\n00:00:00.000 --> "
+                f"{hours:02d}:{minutes:02d}:{seconds:02d}.000\n{text}\n"
+            )
             return PlainTextResponse(vtt)
         elif response_format == "verbose_json":
             resp = WhisperVerboseResponse(

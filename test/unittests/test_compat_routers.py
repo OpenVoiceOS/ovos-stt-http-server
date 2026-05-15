@@ -61,14 +61,6 @@ def _make_app(model, translator=None) -> FastAPI:
     app.include_router(make_openai_whisper_router(model, translator=translator))
     return app
 
-    app = FastAPI()
-    app.include_router(make_openai_whisper_router(model))
-    app.include_router(make_deepgram_router(model))
-    app.include_router(make_google_stt_router(model))
-    app.include_router(make_assemblyai_router(model))
-    app.include_router(make_speechmatics_router(model))
-    return app
-
 
 @pytest.fixture(scope="module")
 def client(model, translator):

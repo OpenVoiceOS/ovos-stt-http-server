@@ -43,8 +43,8 @@ def multipart_audio_to_audiodata(file_bytes: bytes, filename: str) -> AudioData:
             sample_width = wf.getsampwidth()
             audio_bytes = wf.readframes(wf.getnframes())
         return AudioData(audio_bytes, sample_rate, sample_width)
-    except ImportError:
+    except ImportError as err:
         raise HTTPException(
             status_code=501,
             detail=f"Format '{ext}' requires pydub. Install with: pip install pydub",
-        )
+        ) from err
