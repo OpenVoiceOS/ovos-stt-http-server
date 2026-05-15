@@ -24,6 +24,10 @@ dependencies = [
     "ovos-utils>=0.0.32,<1.0.0",
 ]
 
+[project.optional-dependencies]
+audio = ["pydub"]
+test = ["pytest", "httpx", "pytest-cov"]
+
 [project.urls]
 Homepage = "https://github.com/OpenVoiceOS/ovos-stt-http-server"
 Repository = "https://github.com/OpenVoiceOS/ovos-stt-http-server"

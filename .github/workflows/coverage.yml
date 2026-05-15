@@ -1,0 +1,14 @@
+name: Coverage
+on:
+  push:
+  pull_request:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  coverage:
+    uses: OpenVoiceOS/gh-automations/.github/workflows/coverage.yml@dev
+    with:
+      install_extras: '.[test]'
+      min_coverage: 90

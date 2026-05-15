@@ -10,8 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from tempfile import NamedTemporaryFile
-
 from typing import List, Tuple, Optional, Set, Union
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
