@@ -175,6 +175,9 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
         lang, prob = model.detect_language(audio_bytes, valid_langs=valid)
         return {"lang": lang, "conf": prob}
 
+    from ovos_stt_http_server.routers.chromium import make_chromium_router
+    app.include_router(make_chromium_router(model))
+
     return app, model
 
 
