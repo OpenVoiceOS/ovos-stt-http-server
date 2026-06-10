@@ -34,13 +34,11 @@ def _make_model(transcription: str = "hello world", detected_lang: str = "en-us"
 
 
 def _get_tools(mcp):
-    return asyncio.get_event_loop().run_until_complete(mcp.list_tools())
+    return asyncio.run(mcp.list_tools())
 
 
 def _call_tool(mcp, name, kwargs):
-    content_list, _structured = asyncio.get_event_loop().run_until_complete(
-        mcp.call_tool(name, kwargs)
-    )
+    content_list, _structured = asyncio.run(mcp.call_tool(name, kwargs))
     return content_list
 
 
@@ -118,9 +116,7 @@ class TestTranscribeTool:
     def _call(self, model, **kwargs):
         from ovos_stt_http_server.mcp_server import build_mcp_server
         mcp = build_mcp_server(model)
-        content_list, _ = asyncio.get_event_loop().run_until_complete(
-            mcp.call_tool("transcribe", kwargs)
-        )
+        content_list, _ = asyncio.run(mcp.call_tool("transcribe", kwargs))
         return _extract_text(content_list)
 
     def test_transcribe_with_audio_b64(self):
@@ -157,9 +153,7 @@ class TestTranscribeTool:
         mcp = build_mcp_server(model)
         # Calling with neither audio_b64 nor audio_path should raise
         with pytest.raises(Exception):
-            asyncio.get_event_loop().run_until_complete(
-                mcp.call_tool("transcribe", {})
-            )
+            asyncio.run(mcp.call_tool("transcribe", {}))
 
     def test_transcribe_empty_result_returns_empty_string(self):
         model = _make_model("")
@@ -185,13 +179,11 @@ class TestTranscribeTool:
         from ovos_stt_http_server.mcp_server import build_mcp_server
         from ovos_plugin_manager.utils.audio import AudioData
         mcp = build_mcp_server(model)
-        asyncio.get_event_loop().run_until_complete(
-            mcp.call_tool("transcribe", {
-                "audio_b64": b64_data,
-                "audio_path": str(audio_file),
-                "lang": "en-us",
-            })
-        )
+        asyncio.run(mcp.call_tool("transcribe", {
+            "audio_b64": b64_data,
+            "audio_path": str(audio_file),
+            "lang": "en-us",
+        }))
         call_audio: AudioData = model.process_audio.call_args[0][0]
         assert call_audio.frame_data == b"\x01" * 100
 
@@ -201,12 +193,10 @@ class TestTranscribeTool:
         model = _make_model()
         mcp = build_mcp_server(model)
         with pytest.raises(Exception):
-            asyncio.get_event_loop().run_until_complete(
-                mcp.call_tool("transcribe", {
-                    "audio_b64": "!!!not-valid-base64!!!",
-                    "lang": "en-us",
-                })
-            )
+            asyncio.run(mcp.call_tool("transcribe", {
+                "audio_b64": "!!!not-valid-base64!!!",
+                "lang": "en-us",
+            }))
 
     def test_transcribe_audio_path_not_found_raises(self):
         """A non-existent audio_path must raise FileNotFoundError (or similar)."""
@@ -214,12 +204,10 @@ class TestTranscribeTool:
         model = _make_model()
         mcp = build_mcp_server(model)
         with pytest.raises(Exception):
-            asyncio.get_event_loop().run_until_complete(
-                mcp.call_tool("transcribe", {
-                    "audio_path": "/tmp/__nonexistent_ovos_test_file__.pcm",
-                    "lang": "en-us",
-                })
-            )
+            asyncio.run(mcp.call_tool("transcribe", {
+                "audio_path": "/tmp/__nonexistent_ovos_test_file__.pcm",
+                "lang": "en-us",
+            }))
 
     def test_transcribe_detect_language_failure_falls_back(self):
         """Engines without language detection fall back to the default lang."""
@@ -230,12 +218,10 @@ class TestTranscribeTool:
         mcp = build_mcp_server(model)
         raw = b"\x00" * 50
         audio_b64 = base64.b64encode(raw).decode()
-        asyncio.get_event_loop().run_until_complete(
-            mcp.call_tool("transcribe", {
-                "audio_b64": audio_b64,
-                "lang": "auto",
-            })
-        )
+        asyncio.run(mcp.call_tool("transcribe", {
+            "audio_b64": audio_b64,
+            "lang": "auto",
+        }))
         lang_used = model.process_audio.call_args[0][1]
         assert lang_used == "pt-pt"
 

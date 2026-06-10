@@ -88,24 +88,19 @@ def build_mcp_server(
         Provide **one** of ``audio_b64`` (base64-encoded raw PCM bytes) or
         ``audio_path`` (absolute path to an audio file on the server).
 
-        Parameters
-        ----------
-        audio_b64:
-            Base64-encoded raw PCM audio bytes.
-        audio_path:
-            Absolute path to a WAV/PCM audio file accessible by the server.
-        lang:
-            BCP-47 language tag (e.g. ``"en-us"``) or ``"auto"`` for
-            automatic language detection.
-        sample_rate:
-            Sample rate of the audio in Hz (default 16 000).
-        sample_width:
-            Sample width in bytes (default 2 = 16-bit).
+        Args:
+            audio_b64: Base64-encoded raw PCM audio bytes.
+            audio_path: Absolute path to a WAV/PCM audio file accessible by the server.
+            lang: BCP-47 language tag (e.g. ``"en-us"``) or ``"auto"`` for
+                automatic language detection.
+            sample_rate: Sample rate of the audio in Hz (default 16 000).
+            sample_width: Sample width in bytes (default 2 = 16-bit).
 
-        Returns
-        -------
-        str
+        Returns:
             The transcribed text, or an empty string if nothing was heard.
+
+        Raises:
+            ValueError: When neither *audio_b64* nor *audio_path* is supplied.
         """
         if audio_b64 is None and audio_path is None:
             raise ValueError("Provide either audio_b64 or audio_path")
@@ -114,6 +109,7 @@ def build_mcp_server(
             with open(audio_path, "rb") as fh:
                 raw_bytes = fh.read()
         else:
+            assert audio_b64 is not None  # guarded by the ValueError above
             raw_bytes = base64.b64decode(audio_b64)
 
         audio = AudioData(raw_bytes, sample_rate, sample_width)

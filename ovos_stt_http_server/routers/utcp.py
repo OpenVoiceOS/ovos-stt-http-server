@@ -20,6 +20,8 @@ No extra dependencies are required; the endpoint is always available.
 """
 from __future__ import annotations
 
+from typing import Any, Dict
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
@@ -29,7 +31,7 @@ _MANUAL_VERSION = "1.0.0"
 _UTCP_SPEC_VERSION = "1.0.0"
 
 
-def _stt_tool(base_url: str) -> dict:
+def _stt_tool(base_url: str) -> Dict[str, Any]:
     return {
         "name": "stt",
         "description": (
@@ -88,7 +90,7 @@ def _stt_tool(base_url: str) -> dict:
     }
 
 
-def _lang_detect_tool(base_url: str) -> dict:
+def _lang_detect_tool(base_url: str) -> Dict[str, Any]:
     return {
         "name": "lang_detect",
         "description": (
@@ -132,7 +134,7 @@ def _lang_detect_tool(base_url: str) -> dict:
     }
 
 
-def _status_tool(base_url: str) -> dict:
+def _status_tool(base_url: str) -> Dict[str, Any]:
     return {
         "name": "status",
         "description": (
@@ -163,7 +165,7 @@ def _status_tool(base_url: str) -> dict:
     }
 
 
-def build_utcp_manual(base_url: str) -> dict:
+def build_utcp_manual(base_url: str) -> Dict[str, Any]:
     """Return a UTCP-1.0 manual dict for all endpoints at *base_url*.
 
     Parameters
