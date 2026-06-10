@@ -4,8 +4,13 @@
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-http-server/compare/0.1.5a10...HEAD)
 
+**Closed issues:**
+
+- feat: expose STT via MCP + UTCP [\#74](https://github.com/OpenVoiceOS/ovos-stt-http-server/issues/74)
+
 **Merged pull requests:**
 
+- feat: expose STT via MCP and UTCP [\#75](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/75) ([JarbasAl](https://github.com/JarbasAl))
 - ci: scope coverage to source package only [\#73](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/73) ([JarbasAl](https://github.com/JarbasAl))
 - docs: voice-pihole hub — /docs index + centralised nginx recipes [\#70](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/70) ([JarbasAl](https://github.com/JarbasAl))
 - feat: Chromium / Chrome Web Speech API compat router \(/speech-api/v2\) [\#68](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/68) ([JarbasAl](https://github.com/JarbasAl))
