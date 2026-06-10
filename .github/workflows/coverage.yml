@@ -10,6 +10,6 @@ jobs:
   coverage:
     uses: OpenVoiceOS/gh-automations/.github/workflows/coverage.yml@dev
     with:
-      install_extras: '.[audio,test]'
+      install_extras: '.[audio,test,mcp]'
       min_coverage: 90
       test_path: 'test/unittests'
