@@ -119,8 +119,15 @@ def build_mcp_server(
         audio = AudioData(raw_bytes, sample_rate, sample_width)
 
         if lang == "auto":
-            detected_lang, _conf = model.detect_language(raw_bytes)
-            lang = detected_lang
+            try:
+                detected_lang, _conf = model.detect_language(raw_bytes)
+                lang = detected_lang
+            except Exception as e:
+                # engines without audio language detection fall back to
+                # their default language instead of failing the call
+                lang = getattr(model, "default_lang", None) or "en-us"
+                LOG.debug(f"[MCP] language detection unavailable ({e}); "
+                          f"falling back to {lang}")
 
         result = model.process_audio(audio, lang)
         LOG.debug(f"[MCP] transcribe lang={lang} result={result!r}")
@@ -147,7 +154,22 @@ def mount_mcp_on_fastapi(app, model, path: str = "/mcp") -> None:
     """
     _require_mcp()
     mcp = build_mcp_server(model)
-    # FastMCP ≥ 2.x exposes streamable_http_app() for ASGI mounting
-    asgi_app = mcp.streamable_http_app()
-    app.mount(path, asgi_app)
-    LOG.info(f"MCP server mounted at {path}  (streamable-HTTP + SSE)")
+    # Serve the streamable-HTTP transport at the mount root so the endpoint
+    # is exactly *path* (FastMCP defaults to an internal /mcp sub-path, which
+    # would yield /mcp/mcp when mounted).
+    mcp.settings.streamable_http_path = "/"
+    app.mount(path, mcp.streamable_http_app())
+
+    # Starlette does not propagate lifespan events to mounted sub-apps, and
+    # the streamable transport requires its session manager running.
+    from contextlib import asynccontextmanager
+    _original_lifespan = app.router.lifespan_context
+
+    @asynccontextmanager
+    async def _lifespan_with_mcp(host_app):
+        async with _original_lifespan(host_app):
+            async with mcp.session_manager.run():
+                yield
+
+    app.router.lifespan_context = _lifespan_with_mcp
+    LOG.info(f"MCP server mounted at {path} (streamable-HTTP)")

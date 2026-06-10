@@ -221,21 +221,23 @@ class TestTranscribeTool:
                 })
             )
 
-    def test_transcribe_detect_language_failure_propagates(self):
-        """If detect_language raises, the exception propagates from transcribe."""
+    def test_transcribe_detect_language_failure_falls_back(self):
+        """Engines without language detection fall back to the default lang."""
         from ovos_stt_http_server.mcp_server import build_mcp_server
-        model = _make_model()
-        model.detect_language.side_effect = RuntimeError("lang detect exploded")
+        model = _make_model("fallback text")
+        model.detect_language.side_effect = RuntimeError("not supported")
+        model.default_lang = "pt-pt"
         mcp = build_mcp_server(model)
         raw = b"\x00" * 50
         audio_b64 = base64.b64encode(raw).decode()
-        with pytest.raises(Exception, match="lang detect exploded"):
-            asyncio.get_event_loop().run_until_complete(
-                mcp.call_tool("transcribe", {
-                    "audio_b64": audio_b64,
-                    "lang": "auto",
-                })
-            )
+        asyncio.get_event_loop().run_until_complete(
+            mcp.call_tool("transcribe", {
+                "audio_b64": audio_b64,
+                "lang": "auto",
+            })
+        )
+        lang_used = model.process_audio.call_args[0][1]
+        assert lang_used == "pt-pt"
 
     def test_transcribe_returns_detected_lang_text(self):
         """When lang=auto, process_audio is called with the detected language."""
