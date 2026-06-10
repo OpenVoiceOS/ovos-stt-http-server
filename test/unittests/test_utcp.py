@@ -140,3 +140,79 @@ class TestUtcpEndpoint:
         data = self.client.get("/utcp").json()
         assert "utcp_version" in data
         assert "manual_version" in data
+
+    def test_get_utcp_no_proxy_header_support(self):
+        """Document gap: X-Forwarded-Host/-Proto are NOT used.
+
+        The endpoint derives base_url from Starlette's request.base_url, which
+        does not honour X-Forwarded-* headers unless a TrustedHostMiddleware /
+        ProxyHeadersMiddleware is configured.  When those headers are sent the
+        returned URLs still reflect the direct-connection base URL.
+        """
+        data = self.client.get(
+            "/utcp",
+            headers={"X-Forwarded-Host": "proxy.example.com", "X-Forwarded-Proto": "https"},
+        ).json()
+        stt = next(t for t in data["tools"] if t["name"] == "stt")
+        # Without proxy middleware the URL still references testserver, NOT the
+        # forwarded host — this is a known limitation / future enhancement.
+        url = stt["tool_call_template"]["url"]
+        assert "proxy.example.com" not in url, (
+            "X-Forwarded-Host is now honoured — remove this gap note and add a "
+            "positive assertion instead."
+        )
+
+
+# ---------------------------------------------------------------------------
+# Additional build_utcp_manual() structural tests
+# ---------------------------------------------------------------------------
+
+class TestBuildUtcpManualExtra:
+    BASE = "http://myserver.example.com:9090"
+
+    def setup_method(self):
+        self.manual = build_utcp_manual(self.BASE)
+
+    def test_non_standard_port_preserved_in_urls(self):
+        """Port 9090 must appear in every tool URL."""
+        for tool in self.manual["tools"]:
+            url = tool["tool_call_template"]["url"]
+            assert "9090" in url, f"Port missing from URL in tool {tool['name']!r}: {url}"
+
+    def test_stt_query_params_template_has_sample_fields(self):
+        """The STT tool_call_template must expose sample_rate and sample_width."""
+        stt = next(t for t in self.manual["tools"] if t["name"] == "stt")
+        qp = stt["tool_call_template"].get("query_params", {})
+        assert "sample_rate" in qp
+        assert "sample_width" in qp
+
+    def test_all_tools_have_http_protocol(self):
+        for tool in self.manual["tools"]:
+            assert tool["tool_call_template"]["protocol"] == "http"
+
+    def test_all_tools_outputs_is_object(self):
+        for tool in self.manual["tools"]:
+            assert tool["outputs"]["type"] == "object"
+
+    def test_lang_detect_outputs_has_lang_and_conf(self):
+        ld = next(t for t in self.manual["tools"] if t["name"] == "lang_detect")
+        props = ld["outputs"]["properties"]
+        assert "lang" in props
+        assert "conf" in props
+
+    def test_status_outputs_has_status_field(self):
+        st = next(t for t in self.manual["tools"] if t["name"] == "status")
+        assert "status" in st["outputs"]["properties"]
+
+    def test_stt_content_type_header(self):
+        """STT tool must declare application/octet-stream Content-Type."""
+        stt = next(t for t in self.manual["tools"] if t["name"] == "stt")
+        assert stt["tool_call_template"]["headers"]["Content-Type"] == "application/octet-stream"
+
+    def test_lang_detect_content_type_header(self):
+        ld = next(t for t in self.manual["tools"] if t["name"] == "lang_detect")
+        assert ld["tool_call_template"]["headers"]["Content-Type"] == "application/octet-stream"
+
+    def test_status_tool_no_required_inputs(self):
+        st = next(t for t in self.manual["tools"] if t["name"] == "status")
+        assert st["inputs"]["required"] == []

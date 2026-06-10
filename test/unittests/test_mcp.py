@@ -169,6 +169,74 @@ class TestTranscribeTool:
         text = self._call(model, audio_b64=audio_b64, lang="en-us")
         assert text == ""
 
+    def test_transcribe_both_inputs_given_audio_path_wins(self, tmp_path):
+        """When both audio_b64 and audio_path are supplied, audio_path takes priority.
+
+        The source reads ``if audio_path is not None`` first, so the file is
+        used and the b64 string is ignored.
+        """
+        model = _make_model("from file")
+        audio_file = tmp_path / "both.pcm"
+        audio_file.write_bytes(b"\x01" * 100)
+        # audio_b64 contains different data — if it were used the test would
+        # still pass (same model mock), but we verify process_audio is called
+        # with bytes matching the file content, not the b64.
+        b64_data = base64.b64encode(b"\x02" * 100).decode()
+        from ovos_stt_http_server.mcp_server import build_mcp_server
+        from ovos_plugin_manager.utils.audio import AudioData
+        mcp = build_mcp_server(model)
+        asyncio.get_event_loop().run_until_complete(
+            mcp.call_tool("transcribe", {
+                "audio_b64": b64_data,
+                "audio_path": str(audio_file),
+                "lang": "en-us",
+            })
+        )
+        call_audio: AudioData = model.process_audio.call_args[0][0]
+        assert call_audio.frame_data == b"\x01" * 100
+
+    def test_transcribe_invalid_base64_raises(self):
+        """Passing a non-base64 string for audio_b64 raises an exception."""
+        from ovos_stt_http_server.mcp_server import build_mcp_server
+        model = _make_model()
+        mcp = build_mcp_server(model)
+        with pytest.raises(Exception):
+            asyncio.get_event_loop().run_until_complete(
+                mcp.call_tool("transcribe", {
+                    "audio_b64": "!!!not-valid-base64!!!",
+                    "lang": "en-us",
+                })
+            )
+
+    def test_transcribe_audio_path_not_found_raises(self):
+        """A non-existent audio_path must raise FileNotFoundError (or similar)."""
+        from ovos_stt_http_server.mcp_server import build_mcp_server
+        model = _make_model()
+        mcp = build_mcp_server(model)
+        with pytest.raises(Exception):
+            asyncio.get_event_loop().run_until_complete(
+                mcp.call_tool("transcribe", {
+                    "audio_path": "/tmp/__nonexistent_ovos_test_file__.pcm",
+                    "lang": "en-us",
+                })
+            )
+
+    def test_transcribe_detect_language_failure_propagates(self):
+        """If detect_language raises, the exception propagates from transcribe."""
+        from ovos_stt_http_server.mcp_server import build_mcp_server
+        model = _make_model()
+        model.detect_language.side_effect = RuntimeError("lang detect exploded")
+        mcp = build_mcp_server(model)
+        raw = b"\x00" * 50
+        audio_b64 = base64.b64encode(raw).decode()
+        with pytest.raises(Exception, match="lang detect exploded"):
+            asyncio.get_event_loop().run_until_complete(
+                mcp.call_tool("transcribe", {
+                    "audio_b64": audio_b64,
+                    "lang": "auto",
+                })
+            )
+
     def test_transcribe_returns_detected_lang_text(self):
         """When lang=auto, process_audio is called with the detected language."""
         model = _make_model("olá mundo", detected_lang="pt-pt")
@@ -206,6 +274,62 @@ class TestMountMcpOnFastapi:
         with pytest.raises(ImportError, match="FastMCP"):
             mod._require_mcp()
 
+    def test_build_mcp_server_raises_when_mcp_unavailable(self, monkeypatch):
+        """build_mcp_server() raises ImportError when _MCP_AVAILABLE is False."""
+        import ovos_stt_http_server.mcp_server as mod
+        monkeypatch.setattr(mod, "_MCP_AVAILABLE", False)
+        with pytest.raises(ImportError):
+            mod.build_mcp_server(_make_model())
+
+    def test_mount_mcp_on_fastapi_raises_when_mcp_unavailable(self, monkeypatch):
+        """mount_mcp_on_fastapi() raises ImportError when _MCP_AVAILABLE is False."""
+        from fastapi import FastAPI
+        import ovos_stt_http_server.mcp_server as mod
+        monkeypatch.setattr(mod, "_MCP_AVAILABLE", False)
+        app = FastAPI()
+        with pytest.raises(ImportError):
+            mod.mount_mcp_on_fastapi(app, _make_model())
+
+
+# ---------------------------------------------------------------------------
+# MCP module import-time graceful degradation (sys.modules blocking)
+# ---------------------------------------------------------------------------
+
+class TestMcpModuleImportDegradation:
+    """Verify the except-ImportError branch at module level (lines 38-39).
+
+    When ``mcp`` is not on sys.path at import time, the module must still load
+    with ``_MCP_AVAILABLE = False`` rather than raising.
+    """
+
+    def test_module_loads_without_mcp_package(self):
+        """Force a fresh import of mcp_server with mcp blocked in sys.modules."""
+        import sys
+        import importlib
+
+        # Block the mcp package by inserting a sentinel that raises ImportError.
+        sentinel = object()  # not a real module
+        blocked_keys = [k for k in list(sys.modules) if k == "mcp" or k.startswith("mcp.")]
+        saved = {k: sys.modules.pop(k) for k in blocked_keys}
+        # Use a fake module that raises on attribute access is complex;
+        # simpler: set the key to None which causes ImportError on `import mcp`.
+        sys.modules["mcp"] = None  # type: ignore
+        sys.modules["mcp.server"] = None  # type: ignore
+        sys.modules["mcp.server.fastmcp"] = None  # type: ignore
+
+        # Remove the already-cached mcp_server module so it re-executes.
+        mcp_server_saved = sys.modules.pop("ovos_stt_http_server.mcp_server", None)
+        try:
+            import ovos_stt_http_server.mcp_server as fresh_mod
+            assert fresh_mod._MCP_AVAILABLE is False
+        finally:
+            # Restore everything.
+            for k in ["mcp", "mcp.server", "mcp.server.fastmcp"]:
+                sys.modules.pop(k, None)
+            sys.modules.update(saved)
+            if mcp_server_saved is not None:
+                sys.modules["ovos_stt_http_server.mcp_server"] = mcp_server_saved
+
 
 # ---------------------------------------------------------------------------
 # create_app integration: MCP absent → graceful degradation
@@ -221,6 +345,31 @@ class TestCreateAppMcpDegradation:
             mc.return_value = _make_model()
             from ovos_stt_http_server import create_app
             app, model = create_app("mock-stt")
+
+        from fastapi import FastAPI
+        assert isinstance(app, FastAPI)
+
+    def test_create_app_mcp_import_error_caught(self):
+        """create_app() catches ImportError from mount_mcp_on_fastapi gracefully.
+
+        Patches the mcp_server submodule in sys.modules so the ``from … import``
+        inside create_app triggers an ImportError through the module's own guard.
+        """
+        import sys
+        import ovos_stt_http_server.mcp_server as mcp_mod
+
+        with patch("ovos_stt_http_server.ModelContainer") as mc, \
+             patch.object(mcp_mod, "mount_mcp_on_fastapi", side_effect=ImportError("no mcp")):
+            mc.return_value = _make_model()
+            # Force create_app to use the patched module by flushing its cache entry.
+            saved = sys.modules.get("ovos_stt_http_server.mcp_server")
+            sys.modules["ovos_stt_http_server.mcp_server"] = mcp_mod  # already patched
+            try:
+                from ovos_stt_http_server import create_app
+                app, model = create_app("mock-stt")
+            finally:
+                if saved is not None:
+                    sys.modules["ovos_stt_http_server.mcp_server"] = saved
 
         from fastapi import FastAPI
         assert isinstance(app, FastAPI)
