@@ -34,7 +34,7 @@ Status reflects merge state into `dev`:
 | AWS Transcribe | `/aws` | 🟡 open | [#60](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/60) |
 | IBM Watson STT | `/watson/speech-to-text` | 🟡 open | [#61](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/61) |
 | Wit.ai | `/wit` | 🟡 open | [#62](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/62) |
-| Chromium Web Speech | `/speech-api/v2` | 🟡 open | [#68](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/68) |
+| Chromium Web Speech | `/speech-api/v2` | ✅ merged |
 
 ## Self-hosted / OSS server protocols
 
@@ -104,6 +104,70 @@ with open("clip-fr.wav", "rb") as fp:
     r = client.audio.translations.create(model="whisper-1", file=fp)
 print(r.text)
 ```
+
+---
+
+## Chromium / Chrome Web Speech API (`/speech-api/v2`)
+
+**Upstream sources**:
+- Wire format reverse-engineered in
+  [OpenVoiceOS/ovos-stt-plugin-chromium](https://github.com/OpenVoiceOS/ovos-stt-plugin-chromium)
+- Original protocol description: [Chromium speech API key history](http://web.archive.org/web/20160309230031/http://www.chromium.org/developers/how-tos/api-keys)
+
+### Endpoint
+
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| `POST` | `/speech-api/v2/recognize` | FLAC body → newline-delimited JSON results |
+
+Query parameters (all accepted, all silently ignored — the OVOS plugin
+chooses what to recognise):
+
+| Param | Notes |
+| :--- | :--- |
+| `client` | Defaults to `chromium`; some upstream clients use `chrome`. |
+| `lang` | BCP-47 language tag; forwarded to the OVOS plugin. |
+| `key` | Chromium API key. Accepted, never validated. |
+| `pFilter` | Profanity filter flag — accepted, ignored. |
+
+### Response
+
+Two newline-delimited JSON lines, matching the upstream wire format
+verbatim. Some clients only parse the second; others stream both. We send
+both even for empty results so streaming consumers see at least one frame:
+
+```json
+{"result":[]}
+{"result":[{"alternative":[{"transcript":"hello world","confidence":0.99}],"final":true}],"result_index":0}
+```
+
+Empty-transcript case emits only the first line.
+
+### Pointing apps at this server
+
+The canonical "SDK" for this API is the `ovos-stt-plugin-chromium`
+package — it speaks the exact wire format. Drive it against this server
+with a `requests` monkey-patch (in production replace this with the
+nginx redirect below):
+
+```python
+import ovos_stt_plugin_chromium as chromium_mod
+real_post = chromium_mod.requests.post
+
+def patched_post(url, *args, **kwargs):
+    if url.startswith("http://www.google.com/speech-api"):
+        url = "http://localhost:8080/speech-api" + url.split("/speech-api", 1)[1]
+    return real_post(url, *args, **kwargs)
+
+chromium_mod.requests.post = patched_post
+
+from ovos_stt_plugin_chromium import ChromiumSTT
+plugin = ChromiumSTT(config={"lang": "en-us"})
+# plugin.execute(audio) routes through patched_post → our server
+```
+
+A runnable version (with full `speech_recognition` audio fixture) lives in
+[`examples/chromium_example.py`](../examples/chromium_example.py).
 
 ### Network-level redirect
 

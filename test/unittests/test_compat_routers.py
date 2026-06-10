@@ -1,7 +1,7 @@
 # Licensed under the Apache License, Version 2.0
 """Unit tests for STT server compatibility routers.
 
-All compat routers are mounted under a named prefix (e.g. /openai, /deepgram)
+All compat routers are mounted under a named prefix (e.g. /openai, /speech-api)
 to avoid path conflicts when all routers are registered in the same FastAPI app.
 """
 import base64
@@ -37,6 +37,11 @@ class FakeModel:
         return "hello world"
 
 
+class FakeEmptyModel:
+    def process_audio(self, audio, lang: str = "auto") -> str:
+        return ""
+
+
 @pytest.fixture(scope="module")
 def model():
     return FakeModel()
@@ -55,17 +60,29 @@ def translator():
     return FakeTranslator()
 
 
-def _make_app(model, translator=None) -> FastAPI:
+def _make_openai_app(model, translator=None) -> FastAPI:
     from ovos_stt_http_server.routers.openai_whisper import make_openai_whisper_router
     app = FastAPI()
     app.include_router(make_openai_whisper_router(model, translator=translator))
     return app
 
 
+def _make_chromium_app(model) -> FastAPI:
+    from ovos_stt_http_server.routers.chromium import make_chromium_router
+    app = FastAPI()
+    app.include_router(make_chromium_router(model))
+    return app
+
+
 @pytest.fixture(scope="module")
 def client(model, translator):
-    app = _make_app(model, translator=translator)
+    app = _make_openai_app(model, translator=translator)
     return TestClient(app)
+
+
+@pytest.fixture(scope="module")
+def chromium_client(model):
+    return TestClient(_make_chromium_app(model))
 
 
 @pytest.fixture(scope="module")
@@ -148,10 +165,6 @@ class TestOpenAIWhisperRouter:
         assert resp.status_code == 200
 
 
-# ---------------------------------------------------------------------------
-# Deepgram  (prefix: /deepgram)
-# ---------------------------------------------------------------------------
-
 class TestWhisperResponseFormats:
     """Additional Whisper response_format edge-case tests."""
 
@@ -194,7 +207,7 @@ class TestWhisperResponseFormats:
 
     def test_translations_503_when_no_translator(self, wav_bytes, model):
         """If no translator was loaded at startup, /translations returns 503."""
-        app = _make_app(model, translator=None)
+        app = _make_openai_app(model, translator=None)
         c = TestClient(app)
         resp = c.post(
             "/openai/v1/audio/translations",
@@ -211,7 +224,7 @@ class TestWhisperResponseFormats:
             def translate(self, text, target=None, source=None):
                 raise RuntimeError("backend down")
 
-        app = _make_app(model, translator=BrokenTranslator())
+        app = _make_openai_app(model, translator=BrokenTranslator())
         c = TestClient(app)
         resp = c.post(
             "/openai/v1/audio/translations",
@@ -222,3 +235,60 @@ class TestWhisperResponseFormats:
         assert "backend down" in resp.json()["detail"]
 
 
+# ---------------------------------------------------------------------------
+# Chromium / Chrome Web Speech API  (prefix: /speech-api)
+# ---------------------------------------------------------------------------
+
+class TestChromiumRouter:
+    def test_recognize_wav(self, chromium_client, wav_bytes):
+        r = chromium_client.post(
+            "/speech-api/v2/recognize?client=chromium&lang=en-US&key=fake&pFilter=0",
+            content=wav_bytes,
+            headers={"Content-Type": "audio/wav"},
+        )
+        assert r.status_code == 200
+        # Two newline-delimited JSON objects, per the Chrome wire format
+        lines = [l for l in r.text.split("\n") if l]
+        assert len(lines) == 2
+        assert json.loads(lines[0]) == {"result": []}
+        second = json.loads(lines[1])
+        assert second["result_index"] == 0
+        alt = second["result"][0]["alternative"][0]
+        assert alt["transcript"] == "hello world"
+        assert second["result"][0]["final"] is True
+
+    def test_recognize_raw_pcm(self, chromium_client):
+        raw = b"\x00\x00" * 1600
+        r = chromium_client.post(
+            "/speech-api/v2/recognize?lang=en-US",
+            content=raw,
+            headers={"Content-Type": "audio/x-raw; rate=16000; bits=16"},
+        )
+        assert r.status_code == 200
+        lines = [l for l in r.text.split("\n") if l]
+        assert json.loads(lines[1])["result"][0]["alternative"][0]["transcript"] == \
+            "hello world"
+
+    def test_empty_transcript_returns_empty_first_line_only(self, wav_bytes):
+        """Empty transcription returns just `{"result":[]}` — no second line."""
+        app = FastAPI()
+        from ovos_stt_http_server.routers.chromium import make_chromium_router
+        app.include_router(make_chromium_router(FakeEmptyModel()))
+        c = TestClient(app)
+        r = c.post(
+            "/speech-api/v2/recognize",
+            content=wav_bytes,
+            headers={"Content-Type": "audio/wav"},
+        )
+        lines = [l for l in r.text.split("\n") if l]
+        assert len(lines) == 1
+        assert json.loads(lines[0]) == {"result": []}
+
+    def test_default_key_accepted(self, chromium_client, wav_bytes):
+        """No key query param — still works (key is accepted-and-ignored)."""
+        r = chromium_client.post(
+            "/speech-api/v2/recognize?lang=en-US",
+            content=wav_bytes,
+            headers={"Content-Type": "audio/wav"},
+        )
+        assert r.status_code == 200

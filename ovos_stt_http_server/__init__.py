@@ -199,6 +199,10 @@ def create_app(stt_plugin, lang_plugin=None, multi=False,
 
     from ovos_stt_http_server.routers.openai_whisper import make_openai_whisper_router
     app.include_router(make_openai_whisper_router(model, translator=translator))
+
+    from ovos_stt_http_server.routers.chromium import make_chromium_router
+    app.include_router(make_chromium_router(model))
+
     return app, model
 
 

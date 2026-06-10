@@ -8,6 +8,7 @@
 
 - ci: scope coverage to source package only [\#73](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/73) ([JarbasAl](https://github.com/JarbasAl))
 - docs: voice-pihole hub — /docs index + centralised nginx recipes [\#70](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/70) ([JarbasAl](https://github.com/JarbasAl))
+- feat: Chromium / Chrome Web Speech API compat router \(/speech-api/v2\) [\#68](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/68) ([JarbasAl](https://github.com/JarbasAl))
 - docs: Wyoming integration via TigreGotico adapter repos [\#59](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/59) ([JarbasAl](https://github.com/JarbasAl))
 - feat: modernize foundation \(no compat endpoints\) [\#52](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/52) ([JarbasAl](https://github.com/JarbasAl))
 
