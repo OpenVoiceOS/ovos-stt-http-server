@@ -176,7 +176,17 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
         return {"lang": lang, "conf": prob}
 
     from ovos_stt_http_server.routers.chromium import make_chromium_router
+    from ovos_stt_http_server.routers.utcp import make_utcp_router
     app.include_router(make_chromium_router(model))
+    app.include_router(make_utcp_router())
+
+    # Mount MCP server when the optional dependency is available.
+    try:
+        from ovos_stt_http_server.mcp_server import mount_mcp_on_fastapi
+        mount_mcp_on_fastapi(app, model)
+    except ImportError:
+        LOG.debug("MCP extra not installed; skipping MCP server. "
+                  "Enable with: pip install 'ovos-stt-http-server[mcp]'")
 
     return app, model
 
