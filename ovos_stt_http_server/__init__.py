@@ -177,10 +177,26 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
 
     from ovos_stt_http_server.routers.chromium import make_chromium_router
     from ovos_stt_http_server.routers.utcp import make_utcp_router
+    from ovos_stt_http_server.routers.deepgram import make_deepgram_router
     app.include_router(make_chromium_router(model))
     app.include_router(make_utcp_router())
     from ovos_stt_http_server.routers.whisper_cpp_server import make_whisper_cpp_server_router
     app.include_router(make_whisper_cpp_server_router(model))
+    from ovos_stt_http_server.routers.speechmatics import make_speechmatics_router
+    app.include_router(make_speechmatics_router(model))
+    from ovos_stt_http_server.routers.google_stt import make_google_stt_router
+    app.include_router(make_google_stt_router(model))
+    from ovos_stt_http_server.routers.wit_ai import make_wit_ai_router
+    app.include_router(make_wit_ai_router(model))
+    from ovos_stt_http_server.routers.assemblyai import make_assemblyai_router
+    app.include_router(make_assemblyai_router(model))
+    from ovos_stt_http_server.routers.azure_stt import make_azure_stt_router
+    app.include_router(make_azure_stt_router(model))
+    from ovos_stt_http_server.routers.ibm_watson_stt import make_ibm_watson_stt_router
+    app.include_router(make_ibm_watson_stt_router(model))
+    from ovos_stt_http_server.routers.aws_transcribe import make_aws_transcribe_router
+    app.include_router(make_aws_transcribe_router(model))
+    app.include_router(make_deepgram_router(model))
 
     # Mount MCP server when the optional dependency is available.
     try:
