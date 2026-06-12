@@ -41,10 +41,18 @@ _jobs: Dict[str, Dict] = {}
 # ----------------------------------------------------------------------
 
 def _now_iso() -> str:
+    """Return current UTC time as ISO-8601 string."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def _start_transcription_job(body: dict, base_url: str, model) -> dict:
+    """Handle the StartTranscriptionJob action.
+
+    Accepts an optional ``data:audio/wav;base64,<payload>`` MediaFileUri so
+    callers can embed audio inline without an S3 bucket.  External URIs are
+    accepted but not fetched — the job completes immediately with an empty
+    transcript (same as the real service for an unreachable media file).
+    """
     job_name = body.get("TranscriptionJobName") or str(uuid.uuid4())
     media = body.get("Media") or {}
     media_uri = media.get("MediaFileUri") or media.get("RedactedMediaFileUri")
@@ -93,6 +101,10 @@ def _public_job(job: dict) -> dict:
 
 
 def _get_transcription_job(body: dict, **_) -> dict:
+    """Handle the GetTranscriptionJob action.
+
+    Raises HTTP 400 when the job name is unknown (matches the real service).
+    """
     name = body.get("TranscriptionJobName")
     if not name or name not in _jobs:
         raise HTTPException(
@@ -103,6 +115,10 @@ def _get_transcription_job(body: dict, **_) -> dict:
 
 
 def _list_transcription_jobs(**_) -> dict:
+    """Handle the ListTranscriptionJobs action.
+
+    Returns a summary list of all in-process jobs.
+    """
     return {
         "TranscriptionJobSummaries": [
             {"TranscriptionJobName": n,
@@ -113,6 +129,10 @@ def _list_transcription_jobs(**_) -> dict:
 
 
 def _delete_transcription_job(body: dict, **_) -> dict:
+    """Handle the DeleteTranscriptionJob action.
+
+    Silently no-ops if the job does not exist (matches real service behaviour).
+    """
     _jobs.pop(body.get("TranscriptionJobName", ""), None)
     return {}
 
