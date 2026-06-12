@@ -71,11 +71,18 @@ class VoskMQTTBridge:
         self._broker_port = broker_port
 
     def _on_connect(self, client, userdata, flags, rc, properties=None):
+        """Subscribe to the three vosk-mqtt protocol topics on successful connection."""
         _LOG.info("MQTT bridge connected (rc=%s)", rc)
         for suffix in ("/lang", "/stream/voice", "/stop"):
             client.subscribe(self._pid + suffix)
 
     def _on_message(self, client, userdata, msg):
+        """Route an incoming MQTT message to the appropriate handler.
+
+        ``{pid}/lang``         — switch the active recognition language.
+        ``{pid}/stream/voice`` — accumulate a raw PCM chunk into the buffer.
+        ``{pid}/stop``         — flush the buffer, run STT, publish ``{pid}/finalTranscribe``.
+        """
         topic = msg.topic
         if topic.endswith("/lang"):
             try:
@@ -110,6 +117,7 @@ class VoskMQTTBridge:
         _LOG.info("Vosk-MQTT bridge started; PID=%s", self._pid)
 
     def stop(self) -> None:
+        """Disconnect from the broker and join the network-loop thread."""
         try:
             self._client.disconnect()
         except Exception:
