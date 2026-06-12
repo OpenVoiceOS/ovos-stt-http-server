@@ -35,6 +35,9 @@ def test_realtime_via_sdk(base_url, monkeypatch):
 
     from assemblyai import transcriber as _aaitrans
 
+    if not hasattr(_aaitrans, "websocket_connect"):
+        pytest.skip("assemblyai realtime API changed (v3 streaming); "
+                    "websocket_connect was removed from the SDK")
     real_connect = _aaitrans.websocket_connect
 
     def patched_connect(url, *args, **kwargs):
