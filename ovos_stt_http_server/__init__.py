@@ -182,6 +182,8 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     app.include_router(make_utcp_router())
     from ovos_stt_http_server.routers.speechmatics import make_speechmatics_router
     app.include_router(make_speechmatics_router(model))
+    from ovos_stt_http_server.routers.wit_ai import make_wit_ai_router
+    app.include_router(make_wit_ai_router(model))
     from ovos_stt_http_server.routers.assemblyai import make_assemblyai_router
     app.include_router(make_assemblyai_router(model))
     from ovos_stt_http_server.routers.azure_stt import make_azure_stt_router
