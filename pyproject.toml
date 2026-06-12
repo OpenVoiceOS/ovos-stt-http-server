@@ -30,7 +30,7 @@ dependencies = [
 
 [project.optional-dependencies]
 audio = ["pydub"]
-test = ["pytest", "httpx", "pytest-cov", "python-multipart", "requests", "uvicorn", "websockets", "deepgram-sdk"]
+test = ["pytest", "httpx", "pytest-cov", "python-multipart", "requests", "uvicorn", "websockets", "deepgram-sdk", "grpcio", "protobuf", "grpcio-tools"]
 mcp = ["mcp>=1.0.0"]
 
 [project.urls]
