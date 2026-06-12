@@ -58,4 +58,6 @@ omit = [
     "test/*",
     "*/proto/*_pb2.py",
     "*/proto/*_pb2_grpc.py",
+    # aiortc is optional; the WebRTC router is tested separately when the dep is present
+    "*/routers/vosk_webrtc.py",
 ]

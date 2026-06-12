@@ -27,11 +27,15 @@ _active_pcs: set = set()
 
 
 class SDPOffer(BaseModel):
+    """SDP offer body sent by the WebRTC client."""
+
     sdp: str
     type: str = "offer"
 
 
 class SDPAnswer(BaseModel):
+    """SDP answer returned by the server after processing the offer."""
+
     sdp: str
     type: str = "answer"
 
@@ -55,6 +59,13 @@ def make_vosk_webrtc_router(model) -> APIRouter:
 
     @router.post("/offer", response_model=SDPAnswer)
     async def offer(payload: SDPOffer) -> SDPAnswer:
+        """Exchange SDP offer for an SDP answer (vosk-server WebRTC handshake).
+
+        The client POSTs an SDP offer; the server creates an RTCPeerConnection,
+        sets the remote description, generates an answer, and returns it.
+        Audio is buffered from the peer connection's audio track and transcribed
+        when the track ends or the ICE connection closes.
+        """
         offer_desc = RTCSessionDescription(sdp=payload.sdp, type=payload.type)
         pc = RTCPeerConnection()
         _active_pcs.add(pc)
@@ -79,6 +90,7 @@ def make_vosk_webrtc_router(model) -> APIRouter:
 
         @pc.on("datachannel")
         def _on_datachannel(channel):
+            """Store the opened datachannel and signal readiness to the client."""
             nonlocal datachannel
             datachannel = channel
             # Upstream sends an empty JSON to signal "listening"
@@ -86,6 +98,7 @@ def make_vosk_webrtc_router(model) -> APIRouter:
 
         @pc.on("iceconnectionstatechange")
         async def _on_ice_change():
+            """Close the connection on ICE failure or explicit close."""
             if pc.iceConnectionState in ("failed", "closed"):
                 audio_finished.set()
                 await pc.close()
@@ -93,10 +106,12 @@ def make_vosk_webrtc_router(model) -> APIRouter:
 
         @pc.on("track")
         async def _on_track(track):
+            """Accept incoming audio tracks; ignore any non-audio tracks."""
             if track.kind != "audio":
                 return
 
             async def _pump():
+                """Read frames from the audio track, resample to 16 kHz mono s16."""
                 try:
                     while True:
                         frame = await track.recv()
@@ -114,6 +129,7 @@ def make_vosk_webrtc_router(model) -> APIRouter:
 
             @track.on("ended")
             async def _on_ended():
+                """Signal that the audio track has finished."""
                 audio_finished.set()
 
         await pc.setRemoteDescription(offer_desc)
