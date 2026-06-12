@@ -23,6 +23,7 @@
 - docs: Wyoming integration via TigreGotico adapter repos [\#59](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/59) ([JarbasAl](https://github.com/JarbasAl))
 - feat: Microsoft Azure Speech STT compat router \(/azure-stt\) [\#58](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/58) ([JarbasAl](https://github.com/JarbasAl))
 - feat: AssemblyAI-compatible STT router \(/assemblyai\) [\#56](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/56) ([JarbasAl](https://github.com/JarbasAl))
+- feat: Google Cloud STT-compatible router \(/google\) [\#55](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/55) ([JarbasAl](https://github.com/JarbasAl))
 - feat: Deepgram-compatible STT router \(/deepgram\) [\#54](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/54) ([JarbasAl](https://github.com/JarbasAl))
 - feat: modernize foundation \(no compat endpoints\) [\#52](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/52) ([JarbasAl](https://github.com/JarbasAl))
 
