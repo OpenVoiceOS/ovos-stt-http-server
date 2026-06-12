@@ -17,11 +17,13 @@
 - feat: kaldi-gstreamer-server-compatible router \(/client\) [\#69](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/69) ([JarbasAl](https://github.com/JarbasAl))
 - feat: Chromium / Chrome Web Speech API compat router \(/speech-api/v2\) [\#68](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/68) ([JarbasAl](https://github.com/JarbasAl))
 - feat: vosk-server-compatible WebSocket router \(/vosk\) [\#63](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/63) ([JarbasAl](https://github.com/JarbasAl))
+- feat: Wit.ai-compatible /speech router \(/wit\) [\#62](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/62) ([JarbasAl](https://github.com/JarbasAl))
 - feat: IBM Watson Speech-to-Text compat router \(/watson/speech-to-text\) [\#61](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/61) ([JarbasAl](https://github.com/JarbasAl))
 - feat: AWS Transcribe compat router \(/aws\) [\#60](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/60) ([JarbasAl](https://github.com/JarbasAl))
 - docs: Wyoming integration via TigreGotico adapter repos [\#59](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/59) ([JarbasAl](https://github.com/JarbasAl))
 - feat: Microsoft Azure Speech STT compat router \(/azure-stt\) [\#58](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/58) ([JarbasAl](https://github.com/JarbasAl))
 - feat: AssemblyAI-compatible STT router \(/assemblyai\) [\#56](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/56) ([JarbasAl](https://github.com/JarbasAl))
+- feat: Google Cloud STT-compatible router \(/google\) [\#55](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/55) ([JarbasAl](https://github.com/JarbasAl))
 - feat: Deepgram-compatible STT router \(/deepgram\) [\#54](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/54) ([JarbasAl](https://github.com/JarbasAl))
 - feat: modernize foundation \(no compat endpoints\) [\#52](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/52) ([JarbasAl](https://github.com/JarbasAl))
 
