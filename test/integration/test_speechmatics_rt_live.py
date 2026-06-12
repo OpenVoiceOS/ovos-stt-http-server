@@ -1,15 +1,23 @@
-"""Live test: drive the official speechmatics-rt SDK against /speechmatics/v1 WS."""
-import asyncio
+# Licensed under the Apache License, Version 2.0
+"""Live integration test: Speechmatics v5 WebsocketClient against our /speechmatics router.
+
+Uses ``speechmatics.client.WebsocketClient`` with a custom ``ConnectionSettings``
+URL pointing at our local uvicorn server.  The SDK appends ``/{language}`` to
+whatever path is given, so we pass ``url='ws://host/speechmatics/v2/rt'`` and
+the SDK connects to ``/speechmatics/v2/rt/en``.
+"""
 import io
-import wave
 
 import pytest
 
-from test.integration.conftest import run_live_server
+from test.integration.conftest import make_silent_wav, run_live_server
 
 
 @pytest.fixture(scope="module")
 def base_url():
+    """Yield base URL for a live uvicorn server with the Speechmatics router."""
+    pytest.importorskip("speechmatics.client")
+
     from ovos_stt_http_server.routers.speechmatics import make_speechmatics_router
 
     def register(app, model):
@@ -18,44 +26,54 @@ def base_url():
     yield from run_live_server(register)
 
 
-def _raw_pcm(seconds: float = 0.1, sample_rate: int = 16000) -> bytes:
-    """Return raw 16-bit mono PCM bytes (no WAV header) — what SDK expects."""
-    return b"\x00\x00" * int(seconds * sample_rate)
+def test_realtime_transcribe_via_sdk(base_url):
+    """WebsocketClient streams audio and collects AddTranscript messages."""
+    import warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+    from speechmatics.client import WebsocketClient, ConnectionSettings
+    from speechmatics.models import AudioSettings, TranscriptionConfig
 
-def test_realtime_via_sdk(base_url):
-    rt = pytest.importorskip("speechmatics.rt")
+    transcripts = []
 
-    ws_url = base_url.replace("http://", "ws://") + "/speechmatics/v1"
-    transcripts: list = []
+    ws_url = base_url.replace("http://", "ws://") + "/speechmatics/v2/rt"
 
-    async def _run():
-        client = rt.AsyncClient(api_key="ignored", url=ws_url)
+    settings = ConnectionSettings(
+        url=ws_url,
+        auth_token="dummy",
+        generate_temp_token=False,
+    )
+    # The default ssl_context is an SSLContext; websockets raises ValueError
+    # when ssl is passed for a plain ws:// URI.  Override to None so the SDK
+    # omits the ssl kwarg when connecting to our unencrypted local server.
+    settings.ssl_context = None
 
-        @client.on(rt.ServerMessageType.ADD_TRANSCRIPT)
-        def _on_add(msg):
-            transcripts.append(msg)
+    client = WebsocketClient(settings)
 
-        async with client:
-            audio = io.BytesIO(_raw_pcm(0.5))
-            # `transcribe()` is a one-shot helper that streams the file
-            # then closes the session.
-            await client.transcribe(
-                audio,
-                audio_format=rt.AudioFormat(
-                    encoding=rt.AudioEncoding.PCM_S16LE,
-                    sample_rate=16000,
-                ),
-                transcription_config=rt.TranscriptionConfig(language="en"),
-            )
+    def on_transcript(msg):
+        text = msg.get("metadata", {}).get("transcript", "")
+        if text:
+            transcripts.append(text)
 
-    asyncio.run(_run())
+    client.add_event_handler("AddTranscript", on_transcript)
 
-    assert transcripts, "no AddTranscript received"
-    msg = transcripts[0]
-    results = msg.get("results") if isinstance(msg, dict) else msg.results
-    assert results, "AddTranscript had no results"
-    first = results[0] if isinstance(results, list) else results[0]
-    alts = first.get("alternatives") if isinstance(first, dict) else first.alternatives
-    text = alts[0].get("content") if isinstance(alts[0], dict) else alts[0].content
-    assert text == "hello world"
+    audio_data = make_silent_wav()
+    audio_stream = io.BytesIO(audio_data)
+
+    audio_settings = AudioSettings(
+        encoding="pcm_s16le",
+        sample_rate=16000,
+        chunk_size=1024,
+    )
+    transcription_config = TranscriptionConfig(language="en")
+
+    client.run_synchronously(
+        stream=audio_stream,
+        transcription_config=transcription_config,
+        audio_settings=audio_settings,
+        timeout=30,
+    )
+
+    # Our fake engine always returns "hello world"
+    assert transcripts, "Expected at least one transcript message"
+    assert "hello world" in " ".join(transcripts)

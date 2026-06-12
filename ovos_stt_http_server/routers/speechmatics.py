@@ -1,296 +1,344 @@
 # Licensed under the Apache License, Version 2.0
-"""Speechmatics-compatible STT endpoint (batch REST + realtime WebSocket)."""
+"""Speechmatics-compatible STT endpoint (batch REST + realtime WebSocket).
+
+Batch API mirrors the Speechmatics v2 REST surface used by
+``speechmatics.batch_client.BatchClient``:
+
+- ``POST  /speechmatics/v2/jobs``          — submit audio + config, returns job_id
+- ``GET   /speechmatics/v2/jobs/{job_id}`` — poll status
+- ``GET   /speechmatics/v2/jobs/{job_id}/transcript`` — retrieve result
+
+Realtime API mirrors the Speechmatics WebSocket wire protocol used by
+``speechmatics.client.WebsocketClient``.  The SDK connects to
+``{base_url}/{language}?sm-sdk=…`` and speaks a JSON handshake:
+
+- Client → ``StartRecognition``
+- Server → ``RecognitionStarted``
+- Client → binary audio frames + ``EndOfStream`` JSON
+- Server → ``AudioAdded`` (one per audio chunk), ``AddTranscript``, ``EndOfTranscript``
+"""
 import json
 import time
 import uuid
-from datetime import datetime, timezone
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import (APIRouter, File, Form, Header, HTTPException, UploadFile,
-                     WebSocket, WebSocketDisconnect, status)
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Form, Query, Request, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse
+from ovos_plugin_manager.utils.audio import AudioData
 from starlette.websockets import WebSocketState
 
-from ovos_plugin_manager.utils.audio import AudioData
-from ovos_stt_http_server.audio_utils import multipart_audio_to_audiodata
+
+# ---------------------------------------------------------------------------
+# In-memory job store (single-process; good enough for proxy/local use)
+# ---------------------------------------------------------------------------
+
+_JOB_STORE: Dict[str, Dict[str, Any]] = {}
 
 
-# In-memory job store: job_id → metadata + transcript text. Keeping job
-# metadata separate from the transcript so GET /jobs/{id} (status poll)
-# doesn't have to fabricate values on every call — the official SDK reads
-# `created_at` / `data_name` from this response.
-_jobs: Dict[str, Dict] = {}
-
-
-class SpeechmaticsTranscriptionConfig(BaseModel):
-    """Transcription configuration for Speechmatics."""
-    language: str = Field(default="en", min_length=1)
-    operating_point: Optional[str] = None
-    diarization: Optional[str] = None
-
-
-class SpeechmaticsJobConfig(BaseModel):
-    """Top-level job configuration."""
-    type: Literal["transcription"] = "transcription"
-    transcription_config: SpeechmaticsTranscriptionConfig = Field(
-        default_factory=SpeechmaticsTranscriptionConfig
-    )
-
-
-class SpeechmaticsJobResponse(BaseModel):
-    """Response from POST /v1/jobs."""
-    id: str
-    status: Literal["running", "done", "rejected", "deleted"] = "done"
-
-
-class SpeechmaticsJobDetails(BaseModel):
-    """JobDetails fields used by GET /v1/jobs/{id}."""
-    id: str
-    status: Literal["running", "done", "rejected", "deleted"] = "done"
-    created_at: str
-    data_name: str
-    duration: Optional[float] = None
-
-
-class SpeechmaticsJobInfoEnvelope(BaseModel):
-    """GET /v1/jobs/{id} response shape: {"job": {...}}."""
-    job: SpeechmaticsJobDetails
-
-
-class SpeechmaticsWord(BaseModel):
-    """A word in a Speechmatics transcript."""
-    type: Literal["word", "punctuation"] = "word"
-    start_time: float = Field(..., ge=0.0)
-    end_time: float = Field(..., ge=0.0)
-    alternatives: List[Dict] = Field(default_factory=list)
-
-
-class SpeechmaticsTranscriptResponse(BaseModel):
-    """GET /v1/jobs/{job_id}/transcript response.
-
-    Shape matches what the official `speechmatics-batch` SDK expects to parse
-    into a `Transcript` dataclass: format + job + metadata + results.
-    """
-    format: str = "2.9"
-    job: SpeechmaticsJobDetails
-    metadata: Dict = Field(default_factory=dict)
-    results: List[SpeechmaticsWord] = Field(default_factory=list)
+def _make_job_id() -> str:
+    """Return a unique job identifier."""
+    return str(uuid.uuid4()).replace("-", "")[:16]
 
 
 def make_speechmatics_router(model) -> APIRouter:
-    """Create Speechmatics-compatible router (synchronous stub)."""
-    router = APIRouter(prefix="/speechmatics/v1", tags=["speechmatics"])
+    """Create Speechmatics-compatible batch + realtime router.
 
-    @router.post("/jobs", response_model=SpeechmaticsJobResponse)
-    async def create_job(
-            data_file: UploadFile = File(...),
-            config: str = Form(...),
-            authorization: Optional[str] = Header(default=None),
-    ) -> SpeechmaticsJobResponse:
-        """Create transcription job (Speechmatics-compatible, synchronous stub).
+    The returned router mounts at ``/speechmatics`` so that:
+    - ``BatchClient(ConnectionSettings(url='http://host/speechmatics'))``
+      correctly submits to ``/speechmatics/v2/jobs``.
+    - ``WebsocketClient(ConnectionSettings(url='ws://host/speechmatics/v2/rt'))``
+      correctly connects to ``/speechmatics/v2/rt/{language}``.
 
-        Transcribes immediately and stores result for GET retrieval.
+    Args:
+        model: Any object with a ``process_audio(AudioData, lang: str) -> str`` method.
 
-        Args:
-            data_file: Audio file upload.
-            config: JSON string with SpeechmaticsJobConfig.
-            authorization: Auth header (accepted, ignored).
+    Returns:
+        Configured ``APIRouter`` instance.
+    """
+    router = APIRouter(prefix="/speechmatics", tags=["speechmatics"])
 
-        Returns:
-            SpeechmaticsJobResponse with job ID and 'done' status.
-        """
-        job_id = str(uuid.uuid4())
-        try:
-            cfg = SpeechmaticsJobConfig(**json.loads(config))
-            lang = cfg.transcription_config.language
-        except Exception:
-            lang = "en"
+    # ------------------------------------------------------------------
+    # Batch REST endpoints
+    # ------------------------------------------------------------------
 
-        file_bytes = await data_file.read()
-        filename = data_file.filename or "audio.wav"
-        audio = multipart_audio_to_audiodata(file_bytes, filename)
-        transcript_text = model.process_audio(audio, lang)
-        _jobs[job_id] = {
-            "text": transcript_text or "",
-            "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            "data_name": filename,
-            "language": lang,
-        }
-        return SpeechmaticsJobResponse(id=job_id, status="done")
+    @router.post("/v2/jobs", status_code=201)
+    async def submit_job(
+            request: Request,
+            data_file: Optional[UploadFile] = None,
+    ) -> JSONResponse:
+        """Accept audio + JSON config, run STT immediately, store result.
 
-    @router.get("/jobs/{job_id}", response_model=SpeechmaticsJobInfoEnvelope)
-    def get_job_info(
-            job_id: str,
-            authorization: Optional[str] = Header(default=None),
-    ) -> SpeechmaticsJobInfoEnvelope:
-        """Return job status — used by the official SDK's polling loop."""
-        if job_id not in _jobs:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail=f"Job {job_id!r} not found.")
-        j = _jobs[job_id]
-        return SpeechmaticsJobInfoEnvelope(job=SpeechmaticsJobDetails(
-            id=job_id, status="done",
-            created_at=j["created_at"], data_name=j["data_name"],
-        ))
-
-    @router.get("/jobs/{job_id}/transcript", response_model=SpeechmaticsTranscriptResponse)
-    def get_transcript(
-            job_id: str,
-            format: str = "json-v2",
-            authorization: Optional[str] = Header(default=None),
-    ) -> SpeechmaticsTranscriptResponse:
-        """Retrieve transcript for a completed job (Speechmatics-compatible).
+        The Speechmatics SDK POSTs multipart/form-data with two parts:
+        ``config`` (JSON string) and ``data_file`` (audio bytes).  We
+        transcribe synchronously and stash the result so the polling
+        endpoint can return it instantly.
 
         Args:
-            job_id: Job identifier from POST /v1/jobs response.
-            format: Response format (accepted, json-v2 returned regardless).
-            authorization: Auth header (accepted, ignored).
+            request: Raw FastAPI request (used to read multipart form).
+            data_file: Audio upload part (may be None for fetch_url jobs).
 
         Returns:
-            SpeechmaticsTranscriptResponse with results.
-
-        Raises:
-            HTTPException: 404 if job_id not found.
+            JSON with ``{"id": "<job_id>"}``.
         """
-        if job_id not in _jobs:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Job {job_id!r} not found.",
+        content_type = request.headers.get("content-type", "")
+        audio_bytes = b""
+        language = "en"
+
+        if "multipart" in content_type:
+            form = await request.form()
+            cfg_raw = form.get("config", "{}")
+            if hasattr(cfg_raw, "read"):
+                cfg_raw = await cfg_raw.read()
+                cfg_raw = cfg_raw.decode()
+            try:
+                cfg = json.loads(cfg_raw)
+            except (json.JSONDecodeError, TypeError):
+                cfg = {}
+            language = (
+                cfg.get("transcription_config", {}).get("language", "en") or "en"
             )
-        j = _jobs[job_id]
-        text = j["text"]
-        return SpeechmaticsTranscriptResponse(
-            job=SpeechmaticsJobDetails(
-                id=job_id, status="done",
-                created_at=j["created_at"], data_name=j["data_name"],
-            ),
-            metadata={
-                "created_at": j["created_at"],
+            audio_part = form.get("data_file")
+            if audio_part is not None and hasattr(audio_part, "read"):
+                audio_bytes = await audio_part.read()
+        else:
+            audio_bytes = await request.body()
+
+        job_id = _make_job_id()
+        transcript = ""
+        if audio_bytes:
+            audio = AudioData(audio_bytes, 16000, 2)
+            transcript = model.process_audio(audio, language) or ""
+
+        _JOB_STORE[job_id] = {
+            "job_id": job_id,
+            "status": "done",
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "transcript": transcript,
+            "language": language,
+        }
+        return JSONResponse({"id": job_id}, status_code=201)
+
+    @router.get("/v2/jobs/{job_id}")
+    async def get_job_status(job_id: str) -> JSONResponse:
+        """Return job status for a previously submitted job.
+
+        Args:
+            job_id: Opaque identifier returned by ``submit_job``.
+
+        Returns:
+            JSON with job details and ``status`` field (``"done"`` or ``"running"``).
+        """
+        job = _JOB_STORE.get(job_id)
+        if job is None:
+            return JSONResponse({"error": "not found"}, status_code=404)
+        return JSONResponse({
+            "job": {
+                "id": job["job_id"],
+                "status": job["status"],
+                "created_at": job["created_at"],
+                "duration": 1.0,
+                "config": {
+                    "type": "transcription",
+                    "transcription_config": {"language": job["language"]},
+                },
+            }
+        })
+
+    @router.get("/v2/jobs/{job_id}/transcript")
+    async def get_transcript(
+            job_id: str,
+            format: Optional[str] = Query(default="json-v2"),
+    ) -> JSONResponse:
+        """Return the transcript for a completed job.
+
+        The SDK calls this endpoint to retrieve the final transcript after
+        polling ``/v2/jobs/{job_id}`` until status is ``"done"``.
+
+        Args:
+            job_id: Opaque identifier returned by ``submit_job``.
+            format: Response format (accepted, ignored; always returns json-v2).
+
+        Returns:
+            Speechmatics json-v2 transcript JSON object.
+        """
+        job = _JOB_STORE.get(job_id)
+        if job is None:
+            return JSONResponse({"error": "not found"}, status_code=404)
+        transcript = job.get("transcript", "")
+        words = transcript.split() if transcript else []
+        results = []
+        for i, word in enumerate(words):
+            results.append({
+                "type": "word",
+                "start_time": i * 0.5,
+                "end_time": (i + 1) * 0.5,
+                "alternatives": [
+                    {"content": word, "confidence": 1.0, "language": job["language"]}
+                ],
+            })
+        return JSONResponse({
+            "job": {"id": job_id, "status": "done"},
+            "results": results,
+            "metadata": {
+                "created_at": job["created_at"],
                 "type": "transcription",
-                "transcription_config": {"language": j["language"]},
+                "transcription_config": {"language": job["language"]},
             },
-            results=[
-                SpeechmaticsWord(
-                    type="word",
-                    start_time=0.0,
-                    end_time=1.0,
-                    alternatives=[{"content": text, "confidence": 0.9}],
-                )
-            ] if text else [],
-        )
+        })
 
-    @router.websocket("")
-    @router.websocket("/")
-    async def realtime_ws(ws: WebSocket) -> None:
-        """Realtime WS endpoint matching Speechmatics' RT API wire format.
+    @router.delete("/v2/jobs/{job_id}", status_code=200)
+    async def delete_job(job_id: str) -> JSONResponse:
+        """Remove a job from the store.
 
-        The official `speechmatics-rt` SDK connects to `wss://.../v2` (the
-        prefix root) and exchanges:
+        Args:
+            job_id: Opaque identifier returned by ``submit_job``.
 
-        Inbound (text JSON):
-          - `{"message":"StartRecognition","audio_format":{...},
-              "transcription_config":{...}}`
-          - `{"message":"EndOfStream","last_seq_no": N}`
-          - `{"message":"ForceEndOfUtterance"}`
-          - `{"message":"SetRecognitionConfig", ...}` (acked, ignored)
+        Returns:
+            JSON confirmation or 404 if not found.
+        """
+        if job_id not in _JOB_STORE:
+            return JSONResponse({"error": "not found"}, status_code=404)
+        _JOB_STORE.pop(job_id)
+        return JSONResponse({"deleted": True})
 
-        Inbound (binary): raw audio bytes — one frame per AddAudio.
+    @router.get("/v2/jobs")
+    async def list_jobs() -> JSONResponse:
+        """List all known jobs.
 
-        Outbound (text JSON):
-          - `{"message":"RecognitionStarted","id":"...","language_pack_info":{...}}`
-          - `{"message":"AudioAdded","seq_no": N}` (one per binary frame)
-          - `{"message":"AddTranscript","format":"2.9","metadata":{...},
-              "results":[{"type":"word","alternatives":[{"content":"..."}]}]}`
-          - `{"message":"EndOfTranscript"}`
+        Returns:
+            JSON with ``{"jobs": [...]}`` list of all job records.
+        """
+        jobs = [
+            {
+                "id": j["job_id"],
+                "status": j["status"],
+                "created_at": j["created_at"],
+            }
+            for j in _JOB_STORE.values()
+        ]
+        return JSONResponse({"jobs": jobs})
 
-        OVOS plugins are batch-only, so this buffers every AddAudio frame
-        until EndOfStream / ForceEndOfUtterance / disconnect, then emits
-        a single AddTranscript followed by EndOfTranscript and closes.
+    # ------------------------------------------------------------------
+    # Realtime WebSocket endpoint
+    # ------------------------------------------------------------------
+
+    @router.websocket("/v2/rt/{language}")
+    async def realtime_ws(
+            ws: WebSocket,
+            language: str,
+    ) -> None:
+        """Speechmatics realtime WebSocket endpoint.
+
+        Speaks the Speechmatics realtime wire protocol so that
+        ``speechmatics.client.WebsocketClient`` can connect without
+        modification.  OVOS STT plugins are batch-only; audio is buffered
+        until ``EndOfStream`` arrives, then transcribed once and emitted
+        as ``AddTranscript`` + ``EndOfTranscript``.
+
+        Protocol (messages are JSON unless noted):
+        - Client → ``{"message": "StartRecognition", "audio_format": …, …}``
+        - Server → ``{"message": "RecognitionStarted", "id": …}``
+        - Client → binary frames (raw PCM audio)
+        - Server → ``{"message": "AudioAdded", "seq_no": N}``
+        - Client → ``{"message": "EndOfStream", "last_seq_no": N}``
+        - Server → ``{"message": "AddTranscript", …}``
+        - Server → ``{"message": "EndOfTranscript"}``
+
+        Args:
+            ws: WebSocket connection.
+            language: BCP-47 language code taken from the URL path.
         """
         await ws.accept()
-        session_id = str(uuid.uuid4())
-        seq_no = 0
         buffer = bytearray()
+        seq_no = 0
+        session_id = str(uuid.uuid4())
         sample_rate = 16000
-        language = "en"
-        sample_width = 2
-        start = time.time()
-        started = False
+
         try:
             while True:
                 msg = await ws.receive()
                 if msg["type"] == "websocket.disconnect":
                     break
-                if (data := msg.get("bytes")) is not None:
-                    if not started:
-                        # Audio without StartRecognition — drop silently
-                        continue
-                    buffer.extend(data)
+
+                raw_bytes = msg.get("bytes")
+                if raw_bytes is not None:
+                    # Binary audio frame
+                    buffer.extend(raw_bytes)
                     seq_no += 1
                     await ws.send_text(json.dumps({
-                        "message": "AudioAdded", "seq_no": seq_no,
+                        "message": "AudioAdded",
+                        "seq_no": seq_no,
                     }))
                     continue
-                if (text := msg.get("text")) is not None:
-                    try:
-                        payload = json.loads(text)
-                    except json.JSONDecodeError:
-                        continue
-                    mtype = payload.get("message")
-                    if mtype == "StartRecognition":
-                        audio_format = payload.get("audio_format") or {}
-                        sample_rate = int(audio_format.get("sample_rate") or 16000)
-                        encoding = audio_format.get("encoding") or "pcm_s16le"
-                        sample_width = 1 if encoding.endswith("8") else 2
-                        cfg = payload.get("transcription_config") or {}
-                        language = cfg.get("language") or "en"
-                        started = True
-                        await ws.send_text(json.dumps({
-                            "message": "RecognitionStarted",
-                            "id": session_id,
-                            "language_pack_info": {
-                                "language_description": language,
-                                "word_delimiter": " ",
-                                "writing_direction": "left-to-right",
-                            },
-                        }))
-                        continue
-                    if mtype == "SetRecognitionConfig":
-                        # Accept (e.g. language change), update language if given.
-                        cfg = payload.get("transcription_config") or {}
-                        if "language" in cfg:
-                            language = cfg["language"]
-                        continue
-                    if mtype in ("EndOfStream", "ForceEndOfUtterance"):
-                        break
+
+                text = msg.get("text")
+                if text is None:
+                    continue
+
+                try:
+                    ctrl = json.loads(text)
+                except json.JSONDecodeError:
+                    continue
+
+                msg_type = ctrl.get("message", "")
+
+                if msg_type == "StartRecognition":
+                    # Extract sample rate from audio_format if provided
+                    audio_fmt = ctrl.get("audio_format", {})
+                    sample_rate = audio_fmt.get("sample_rate", 16000)
+                    await ws.send_text(json.dumps({
+                        "message": "RecognitionStarted",
+                        "id": session_id,
+                        "language_pack_info": {
+                            "adapted": False,
+                            "itn": False,
+                            "language_description": language,
+                            "word_delimiter": " ",
+                            "writing_direction": "left-to-right",
+                        },
+                    }))
+
+                elif msg_type == "EndOfStream":
+                    # Transcribe buffered audio and close
+                    transcript = ""
+                    if buffer:
+                        audio = AudioData(bytes(buffer), sample_rate, 2)
+                        transcript = model.process_audio(audio, language) or ""
+
+                    # Emit word-level transcript
+                    words = []
+                    offset = 0.0
+                    for word in (transcript.split() if transcript else []):
+                        words.append({
+                            "type": "word",
+                            "start_time": offset,
+                            "end_time": offset + 0.5,
+                            "alternatives": [
+                                {"content": word, "confidence": 1.0}
+                            ],
+                        })
+                        offset += 0.5
+
+                    await ws.send_text(json.dumps({
+                        "message": "AddTranscript",
+                        "results": words,
+                        "metadata": {
+                            "start_time": 0.0,
+                            "end_time": offset or 1.0,
+                            "transcript": transcript,
+                        },
+                    }))
+                    await ws.send_text(json.dumps({"message": "EndOfTranscript"}))
+                    break
+
+                elif msg_type == "SetRecognitionConfig":
+                    # Accept config updates silently
+                    pass
+
         except WebSocketDisconnect:
             pass
-
-        if buffer and ws.client_state == WebSocketState.CONNECTED:
-            audio = AudioData(bytes(buffer), sample_rate, sample_width)
-            transcript_text = model.process_audio(audio, language) or ""
-            elapsed = time.time() - start
-            await ws.send_text(json.dumps({
-                "message": "AddTranscript",
-                "format": "2.9",
-                "metadata": {
-                    "start_time": 0.0,
-                    "end_time": elapsed,
-                    "transcript": transcript_text,
-                },
-                "results": [{
-                    "type": "word",
-                    "start_time": 0.0,
-                    "end_time": elapsed,
-                    "alternatives": [{
-                        "content": transcript_text,
-                        "confidence": 1.0,
-                        "language": language,
-                    }],
-                }] if transcript_text else [],
-            }))
-        if ws.client_state == WebSocketState.CONNECTED:
-            await ws.send_text(json.dumps({"message": "EndOfTranscript"}))
-            await ws.close()
+        finally:
+            if ws.client_state == WebSocketState.CONNECTED:
+                await ws.close()
 
     return router
