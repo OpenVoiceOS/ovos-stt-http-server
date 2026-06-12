@@ -180,6 +180,8 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     from ovos_stt_http_server.routers.deepgram import make_deepgram_router
     app.include_router(make_chromium_router(model))
     app.include_router(make_utcp_router())
+    from ovos_stt_http_server.routers.azure_stt import make_azure_stt_router
+    app.include_router(make_azure_stt_router(model))
     from ovos_stt_http_server.routers.ibm_watson_stt import make_ibm_watson_stt_router
     app.include_router(make_ibm_watson_stt_router(model))
     from ovos_stt_http_server.routers.aws_transcribe import make_aws_transcribe_router
