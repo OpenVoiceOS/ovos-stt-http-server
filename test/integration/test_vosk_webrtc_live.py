@@ -19,10 +19,9 @@ from test.integration.conftest import run_live_server
 
 @pytest.fixture(scope="module")
 def base_url():
-    try:
-        from ovos_stt_http_server.routers.vosk_webrtc import make_vosk_webrtc_router
-    except ImportError:
-        pytest.skip("aiortc not installed")
+    # aiortc is imported lazily inside the router, so check it directly
+    pytest.importorskip("aiortc", reason="aiortc not installed")
+    from ovos_stt_http_server.routers.vosk_webrtc import make_vosk_webrtc_router
 
     def register(app, model):
         app.include_router(make_vosk_webrtc_router(model))
