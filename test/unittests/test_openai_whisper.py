@@ -240,3 +240,49 @@ class TestTranslations:
             data={},
         )
         assert resp.status_code == 422
+
+
+class FakeTranslator:
+    """Minimal OVOS LanguageTranslator stub for the translations endpoint."""
+
+    def translate(self, text, target=None, source=None):
+        return f"[{target}] {text}"
+
+
+def _client_with_translator() -> TestClient:
+    from fastapi import FastAPI
+    from ovos_stt_http_server.routers.openai_whisper import make_openai_whisper_router
+    app = FastAPI()
+    app.include_router(make_openai_whisper_router(FakeModel(), translator=FakeTranslator()))
+    return TestClient(app)
+
+
+def test_translations_runs_through_translator():
+    """/audio/translations transcribes then translates the text to English."""
+    import io
+    c = _client_with_translator()
+    resp = c.post(
+        "/v1/audio/translations",
+        files={"file": ("a.wav", io.BytesIO(b"RIFFxxxx"), "audio/wav")},
+        data={"model": "whisper-1"},
+    )
+    assert resp.status_code == 200
+    # FakeModel returns "hello world"; FakeTranslator prefixes the target lang
+    assert resp.json()["text"] == "[en] hello world"
+
+
+def test_translations_without_translator_returns_transcript():
+    """Without a translator, /translations returns the untranslated transcript."""
+    import io
+    from fastapi import FastAPI
+    from ovos_stt_http_server.routers.openai_whisper import make_openai_whisper_router
+    app = FastAPI()
+    app.include_router(make_openai_whisper_router(FakeModel()))  # translator=None
+    c = TestClient(app)
+    resp = c.post(
+        "/v1/audio/translations",
+        files={"file": ("a.wav", io.BytesIO(b"RIFFxxxx"), "audio/wav")},
+        data={"model": "whisper-1"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["text"] == "hello world"
