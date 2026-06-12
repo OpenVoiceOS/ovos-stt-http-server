@@ -24,6 +24,21 @@ from starlette.requests import Request
 LOG.set_level("ERROR")  # avoid server side logs
 
 
+def _load_translator():
+    """Load the configured OVOS translate plugin for /audio/translations.
+
+    OpenAI's translations endpoint always returns English, so we run an extra
+    translate step after ASR. Returns the translator, or ``None`` if no plugin
+    is configured/available (the endpoint then returns the untranslated text).
+    """
+    try:
+        from ovos_plugin_manager.language import OVOSLangTranslationFactory
+        return OVOSLangTranslationFactory.create()
+    except Exception as exc:
+        LOG.debug(f"no translate plugin available for /audio/translations: {exc}")
+        return None
+
+
 class ModelContainer:
     def __init__(self, plugin: str, lang_plugin: str = None, config: dict = None):
         plugin = load_stt_plugin(plugin)
@@ -181,7 +196,7 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     app.include_router(make_chromium_router(model))
     app.include_router(make_utcp_router())
     from ovos_stt_http_server.routers.openai_whisper import make_openai_whisper_router
-    app.include_router(make_openai_whisper_router(model))
+    app.include_router(make_openai_whisper_router(model, translator=_load_translator()))
     from ovos_stt_http_server.routers.whisper_cpp_server import make_whisper_cpp_server_router
     app.include_router(make_whisper_cpp_server_router(model))
     from ovos_stt_http_server.routers.speechmatics import make_speechmatics_router

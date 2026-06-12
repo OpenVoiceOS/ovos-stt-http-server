@@ -99,12 +99,12 @@ def _audio_data_from_upload(file_bytes: bytes, sample_rate: int = 16000, sample_
 # Router factory
 # ---------------------------------------------------------------------------
 
-def make_openai_whisper_router(model) -> APIRouter:
+def make_openai_whisper_router(model, translator=None) -> APIRouter:
     """Create an OpenAI Whisper-compatible router and attach it to *model*.
 
     The router exposes:
     - ``POST /v1/audio/transcriptions`` — transcribe audio to text.
-    - ``POST /v1/audio/translations`` — transcribe audio to English (alias).
+    - ``POST /v1/audio/translations`` — transcribe, then translate to English.
 
     Both endpoints accept ``multipart/form-data`` with at least ``file`` and
     ``model`` fields, exactly as sent by the official ``openai`` Python SDK.
@@ -112,6 +112,11 @@ def make_openai_whisper_router(model) -> APIRouter:
     Args:
         model: Any object with a ``process_audio(audio: AudioData, lang: str)``
             method that returns a transcription string.
+        translator: Optional OVOS ``LanguageTranslator`` (with a
+            ``translate(text, target, source)`` method). OpenAI's
+            ``/audio/translations`` always returns English, so when a translator
+            is provided the transcript is translated to English after ASR. If
+            ``None``, the transcript is returned untranslated.
 
     Returns:
         Configured :class:`~fastapi.APIRouter` prefixed with ``/v1``.
@@ -123,6 +128,7 @@ def make_openai_whisper_router(model) -> APIRouter:
         language: Optional[str],
         response_format: str,
         temperature: float,
+        translate: bool = False,
     ):
         """Shared transcription logic used by both endpoints.
 
@@ -132,6 +138,8 @@ def make_openai_whisper_router(model) -> APIRouter:
             response_format: One of ``json``, ``text``, ``verbose_json``,
                 ``srt``, ``vtt``.
             temperature: Sampling temperature (accepted, not used by OVOS).
+            translate: When ``True``, translate the transcript to English after
+                ASR (the OpenAI ``/audio/translations`` contract).
 
         Returns:
             Response object appropriate for the requested ``response_format``.
@@ -149,6 +157,19 @@ def make_openai_whisper_router(model) -> APIRouter:
 
         start = time.time()
         transcript = model.process_audio(audio, lang) or ""
+        # OpenAI /audio/translations always returns English: transcribe in the
+        # source language, then translate the text to English (extra step after
+        # ASR) using the configured OVOS translate plugin.
+        if translate and translator is not None and transcript:
+            try:
+                transcript = translator.translate(
+                    transcript, target="en",
+                    source=None if lang == "auto" else lang,
+                ) or transcript
+            except Exception:
+                pass  # fall back to the untranslated transcript
+        if translate:
+            lang = "en"
         duration = time.time() - start
 
         fmt = (response_format or "json").lower()
@@ -256,6 +277,8 @@ def make_openai_whisper_router(model) -> APIRouter:
             Same format as ``/audio/transcriptions``.
         """
         # Language forced to "en" for translation semantics.
-        return await _transcribe(file, "en", response_format or "json", temperature or 0.0)
+        # auto-detect the source language, then translate the transcript to English
+        return await _transcribe(file, None, response_format or "json",
+                                 temperature or 0.0, translate=True)
 
     return router
