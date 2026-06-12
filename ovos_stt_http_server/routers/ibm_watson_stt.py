@@ -14,11 +14,15 @@ from ovos_stt_http_server.audio_utils import multipart_audio_to_audiodata
 
 
 class WatsonAlternative(BaseModel):
+    """A single transcription hypothesis from the Watson STT service."""
+
     transcript: str
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
 
 
 class WatsonResult(BaseModel):
+    """One utterance result matching IBM Watson ``SpeechRecognitionResult``."""
+
     alternatives: List[WatsonAlternative]
     final: bool = True
 
@@ -30,6 +34,7 @@ class WatsonResponse(BaseModel):
 
 
 def _make_response(text: str) -> WatsonResponse:
+    """Build a ``WatsonResponse`` with a single final alternative."""
     return WatsonResponse(
         results=[WatsonResult(
             alternatives=[WatsonAlternative(transcript=text)],
