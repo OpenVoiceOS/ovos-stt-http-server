@@ -180,6 +180,8 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     from ovos_stt_http_server.routers.deepgram import make_deepgram_router
     app.include_router(make_chromium_router(model))
     app.include_router(make_utcp_router())
+    from ovos_stt_http_server.routers.openai_whisper import make_openai_whisper_router
+    app.include_router(make_openai_whisper_router(model))
     from ovos_stt_http_server.routers.whisper_cpp_server import make_whisper_cpp_server_router
     app.include_router(make_whisper_cpp_server_router(model))
     from ovos_stt_http_server.routers.speechmatics import make_speechmatics_router
