@@ -61,9 +61,9 @@ class AssemblyAITranscript(BaseModel):
 
 def make_assemblyai_router(model) -> APIRouter:
     """Create AssemblyAI-compatible router (synchronous stub)."""
-    router = APIRouter(prefix="/assemblyai/v2", tags=["assemblyai"])
+    router = APIRouter(prefix="/assemblyai", tags=["assemblyai"])
 
-    @router.post("/upload", response_model=AssemblyAIUploadResponse)
+    @router.post("/v2/upload", response_model=AssemblyAIUploadResponse)
     async def upload(request: Request) -> AssemblyAIUploadResponse:
         """Store raw audio bytes and return an upload URL usable in /transcript.
 
@@ -76,7 +76,7 @@ def make_assemblyai_router(model) -> APIRouter:
         base = str(request.base_url).rstrip("/")
         return AssemblyAIUploadResponse(upload_url=f"{base}/assemblyai/v2/uploads/{upload_id}")
 
-    @router.post("/transcript", response_model=AssemblyAITranscript)
+    @router.post("/v2/transcript", response_model=AssemblyAITranscript)
     def create_transcript(
             request: AssemblyAIRequest,
             authorization: Optional[str] = Header(default=None),
@@ -150,7 +150,7 @@ def make_assemblyai_router(model) -> APIRouter:
         _TRANSCRIPT_STORE[job_id] = transcript
         return transcript
 
-    @router.get("/transcript/{transcript_id}", response_model=AssemblyAITranscript)
+    @router.get("/v2/transcript/{transcript_id}", response_model=AssemblyAITranscript)
     def get_transcript(
             transcript_id: str,
             authorization: Optional[str] = Header(default=None),
@@ -177,7 +177,7 @@ def make_assemblyai_router(model) -> APIRouter:
             error="Transcript not found.",
         )
 
-    @router.websocket("/realtime/ws")
+    @router.websocket("/v2/realtime/ws")
     async def realtime_ws(ws: WebSocket) -> None:
         """Realtime WS endpoint matching AssemblyAI's wire format.
 
@@ -247,6 +247,64 @@ def make_assemblyai_router(model) -> APIRouter:
             }))
 
         if ws.client_state == WebSocketState.CONNECTED:
+            await ws.close()
+
+    @router.websocket("/v3/ws")
+    async def streaming_v3_ws(ws: WebSocket) -> None:
+        """Universal-Streaming (v3) WS endpoint — what the current SDK uses.
+
+        The v3 ``StreamingClient`` connects to ``/v3/ws``, streams raw PCM as
+        binary frames and sends ``{"type":"Terminate"}`` to finish. OVOS STT
+        plugins are batch-only, so buffer the audio and emit a single
+        ``Begin`` → ``Turn`` (final) → ``Termination`` sequence.
+        """
+        await ws.accept()
+        session_id = str(uuid.uuid4())
+        sample_rate = int(ws.query_params.get("sample_rate", 16000))
+        await ws.send_text(json.dumps({
+            "type": "Begin",
+            "id": session_id,
+            "expires_at": int(time.time() + 3600),
+        }))
+        buffer = bytearray()
+        start = time.time()
+        try:
+            while True:
+                msg = await ws.receive()
+                if msg["type"] == "websocket.disconnect":
+                    break
+                if (data := msg.get("bytes")) is not None:
+                    buffer.extend(data)
+                    continue
+                if (text := msg.get("text")) is not None:
+                    try:
+                        payload = json.loads(text)
+                    except json.JSONDecodeError:
+                        continue
+                    if payload.get("type") == "Terminate":
+                        break
+        except WebSocketDisconnect:
+            pass
+
+        if ws.client_state == WebSocketState.CONNECTED:
+            transcript_text = ""
+            if buffer:
+                audio = AudioData(bytes(buffer), sample_rate, 2)
+                transcript_text = model.process_audio(audio, "en") or ""
+            await ws.send_text(json.dumps({
+                "type": "Turn",
+                "turn_order": 0,
+                "turn_is_formatted": True,
+                "end_of_turn": True,
+                "transcript": transcript_text,
+                "end_of_turn_confidence": 1.0,
+                "words": [],
+            }))
+            await ws.send_text(json.dumps({
+                "type": "Termination",
+                "audio_duration_seconds": int(len(buffer) / (sample_rate * 2)),
+                "session_duration_seconds": int(time.time() - start),
+            }))
             await ws.close()
 
     return router

@@ -1,13 +1,12 @@
-"""Live test: drive the official AssemblyAI RealtimeTranscriber against our WS endpoint.
+"""Live test: drive the official AssemblyAI v3 streaming SDK against our WS endpoint.
 
-The SDK derives the WS URL by `base_url.replace("https", "wss")`. Our local
-test server speaks plain ws://, so we monkey-patch the SDK's
-`websocket_connect` to swap wss:// → ws:// at connect time. In production
-deployments TLS in front of port 443 (per the network-redirect docs) makes
-this unnecessary.
+The current ``assemblyai`` SDK exposes Universal-Streaming (v3) via
+``assemblyai.streaming.v3.StreamingClient``. Its ``_build_uri`` honours a
+``ws://`` host as-is (``{host}/v3/ws``), so we point ``api_host`` straight at
+the local ``/assemblyai`` route — no monkeypatching needed (in production a TLS
+front end per the redirect docs makes the host ``wss://``).
 """
 import threading
-import time
 
 import pytest
 
@@ -24,61 +23,39 @@ def base_url():
     yield from run_live_server(register)
 
 
-def test_realtime_via_sdk(base_url, monkeypatch):
-    aai = pytest.importorskip("assemblyai")
-    # The SDK builds wss://<base>/v2/realtime/ws via .replace("https", "wss").
-    # We give it an https-shaped base_url so the replace turns it into wss://,
-    # then patch websocket_connect to rewrite wss → ws (local tests don't TLS).
-    fake_https = base_url.replace("http://", "https://") + "/assemblyai"
-    aai.settings.base_url = fake_https
-    aai.settings.api_key = "ignored"
-
-    from assemblyai import transcriber as _aaitrans
-
-    if not hasattr(_aaitrans, "websocket_connect"):
-        pytest.skip("assemblyai realtime API changed (v3 streaming); "
-                    "websocket_connect was removed from the SDK")
-    real_connect = _aaitrans.websocket_connect
-
-    def patched_connect(url, *args, **kwargs):
-        if url.startswith("wss://"):
-            url = "ws://" + url[len("wss://") :]
-        return real_connect(url, *args, **kwargs)
-
-    monkeypatch.setattr(_aaitrans, "websocket_connect", patched_connect)
-
-    final_transcripts = []
-    errors = []
-    closed = threading.Event()
-
-    def on_data(transcript):
-        if isinstance(transcript, aai.RealtimeFinalTranscript):
-            final_transcripts.append(transcript)
-
-    def on_error(err):
-        errors.append(err)
-
-    def on_close():
-        closed.set()
-
-    t = aai.RealtimeTranscriber(
-        on_data=on_data,
-        on_error=on_error,
-        on_close=on_close,
-        sample_rate=16000,
+def test_streaming_v3_via_sdk(base_url):
+    pytest.importorskip("assemblyai")
+    from assemblyai.streaming.v3 import (
+        StreamingClient,
+        StreamingClientOptions,
+        StreamingParameters,
+        StreamingEvents,
+        TurnEvent,
     )
-    t.connect()
 
-    # Stream the WAV body in two chunks
+    # ws:// host is used verbatim by the SDK → ws://<host>/assemblyai/v3/ws
+    ws_host = base_url.replace("http://", "ws://") + "/assemblyai"
+    client = StreamingClient(StreamingClientOptions(api_host=ws_host, api_key="ignored"))
+
+    turns = []
+    done = threading.Event()
+
+    def on_turn(_self, event: TurnEvent) -> None:
+        if event.end_of_turn:
+            turns.append(event.transcript)
+
+    def on_terminated(_self, _event) -> None:
+        done.set()
+
+    client.on(StreamingEvents.Turn, on_turn)
+    client.on(StreamingEvents.Termination, on_terminated)
+
+    client.connect(StreamingParameters(sample_rate=16000))
     wav = make_silent_wav()
-    t.stream(wav[: len(wav) // 2])
-    t.stream(wav[len(wav) // 2 :])
+    client.stream(wav[: len(wav) // 2])
+    client.stream(wav[len(wav) // 2:])
+    client.disconnect(terminate=True)
 
-    t.close()
-
-    # Allow the recv thread to drain the SessionTerminated and call on_close
-    closed.wait(timeout=5)
-
-    assert not errors, f"realtime errors: {errors}"
-    assert final_transcripts, "no FinalTranscript received"
-    assert final_transcripts[0].text == "hello world"
+    done.wait(timeout=5)
+    assert turns, "no final Turn received"
+    assert turns[0] == "hello world"
