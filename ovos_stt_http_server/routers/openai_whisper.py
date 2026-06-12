@@ -1,175 +1,261 @@
 # Licensed under the Apache License, Version 2.0
-"""OpenAI Whisper-compatible transcription endpoints."""
-import time
-from typing import Annotated, Any, Dict, List, Literal, Optional
+"""OpenAI Whisper-compatible STT endpoints.
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
-from fastapi.responses import PlainTextResponse, JSONResponse
+Implements ``POST /v1/audio/transcriptions`` (and ``/v1/audio/translations``)
+using the multipart/form-data wire format sent by the official ``openai``
+Python SDK (``openai>=1.0``).
+
+Usage::
+
+    from ovos_stt_http_server.routers.openai_whisper import make_openai_whisper_router
+    app.include_router(make_openai_whisper_router(model))
+
+Then point the SDK at the server::
+
+    from openai import OpenAI
+    client = OpenAI(api_key="ignored", base_url="http://localhost:8080/v1")
+    result = client.audio.transcriptions.create(file=audio_bytes, model="whisper-1")
+"""
+import io
+import time
+import wave
+from typing import List, Optional
+
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 
-from ovos_stt_http_server.audio_utils import multipart_audio_to_audiodata
-
-_ResponseFormat = Literal["json", "text", "srt", "vtt", "verbose_json"]
+from ovos_plugin_manager.utils.audio import AudioData
 
 
-class WhisperTranscriptionResponse(BaseModel):
-    """JSON response for OpenAI transcription API."""
+# ---------------------------------------------------------------------------
+# Response schemas
+# ---------------------------------------------------------------------------
 
+class TranscriptionResponse(BaseModel):
+    """Minimal OpenAI transcription response (``response_format=json``, default)."""
+
+    text: str = Field(..., description="Transcribed text.")
+
+
+class TranscriptionSegment(BaseModel):
+    """A single segment in a verbose JSON response."""
+
+    id: int
+    seek: int = 0
+    start: float
+    end: float
     text: str
+    tokens: List[int] = Field(default_factory=list)
+    temperature: float = 0.0
+    avg_logprob: float = 0.0
+    compression_ratio: float = 1.0
+    no_speech_prob: float = 0.0
 
 
-class WhisperVerboseResponse(BaseModel):
-    """Verbose JSON response for OpenAI transcription API."""
+class VerboseTranscriptionResponse(BaseModel):
+    """OpenAI verbose_json transcription response."""
 
-    task: Literal["transcribe", "translate"]
-    language: str = Field(..., min_length=1)
-    duration: float = Field(..., ge=0.0)
+    task: str = "transcribe"
+    language: str = "en"
+    duration: float
     text: str
-    segments: List[Dict[str, Any]] = Field(default_factory=list)
+    segments: List[TranscriptionSegment] = Field(default_factory=list)
+    words: List[dict] = Field(default_factory=list)
 
 
-def make_openai_whisper_router(model, translator=None) -> APIRouter:
-    """Create OpenAI Whisper-compatible router.
+# ---------------------------------------------------------------------------
+# Audio helpers
+# ---------------------------------------------------------------------------
+
+def _audio_data_from_upload(file_bytes: bytes, sample_rate: int = 16000, sample_width: int = 2) -> AudioData:
+    """Convert uploaded file bytes to an :class:`AudioData` instance.
+
+    Tries to parse the bytes as a WAV container first so that sample-rate and
+    sample-width are extracted automatically.  Falls back to the supplied
+    defaults (16 kHz, 16-bit PCM) for raw/non-WAV formats.
 
     Args:
-        model: ModelContainer or MultiModelContainer instance.
-        translator: OVOS LanguageTranslator instance for /audio/translations.
-            Pass None to disable the endpoint (it will return 503).
+        file_bytes: Raw bytes from the multipart upload.
+        sample_rate: Fallback sample rate when WAV metadata is unavailable.
+        sample_width: Fallback sample width (bytes) when WAV metadata is
+            unavailable.
 
     Returns:
-        Configured APIRouter with OpenAI-compatible transcription endpoints.
+        AudioData suitable for passing to ``model.process_audio``.
     """
-    router = APIRouter(prefix="/openai", tags=["openai-whisper"])
+    try:
+        buf = io.BytesIO(file_bytes)
+        with wave.open(buf, "r") as wf:
+            sample_rate = wf.getframerate()
+            sample_width = wf.getsampwidth()
+            file_bytes = wf.readframes(wf.getnframes())
+    except Exception:
+        pass  # not a WAV — use raw bytes with defaults
+    return AudioData(file_bytes, sample_rate, sample_width)
+
+
+# ---------------------------------------------------------------------------
+# Router factory
+# ---------------------------------------------------------------------------
+
+def make_openai_whisper_router(model) -> APIRouter:
+    """Create an OpenAI Whisper-compatible router and attach it to *model*.
+
+    The router exposes:
+    - ``POST /v1/audio/transcriptions`` — transcribe audio to text.
+    - ``POST /v1/audio/translations`` — transcribe audio to English (alias).
+
+    Both endpoints accept ``multipart/form-data`` with at least ``file`` and
+    ``model`` fields, exactly as sent by the official ``openai`` Python SDK.
+
+    Args:
+        model: Any object with a ``process_audio(audio: AudioData, lang: str)``
+            method that returns a transcription string.
+
+    Returns:
+        Configured :class:`~fastapi.APIRouter` prefixed with ``/v1``.
+    """
+    router = APIRouter(prefix="/v1", tags=["openai-whisper"])
 
     async def _transcribe(
-            file: UploadFile,
-            language: Optional[str],
-            response_format: _ResponseFormat,
-            task: Literal["transcribe", "translate"] = "transcribe",
-            translate_to_en: bool = False,
+        file: UploadFile,
+        language: Optional[str],
+        response_format: str,
+        temperature: float,
     ):
-        """Internal transcription helper.
+        """Shared transcription logic used by both endpoints.
+
+        Args:
+            file: Uploaded audio file from the multipart form.
+            language: BCP-47 language code, or ``None`` for auto-detect.
+            response_format: One of ``json``, ``text``, ``verbose_json``,
+                ``srt``, ``vtt``.
+            temperature: Sampling temperature (accepted, not used by OVOS).
+
+        Returns:
+            Response object appropriate for the requested ``response_format``.
+
+        Raises:
+            HTTPException: 400 if *file* is empty, 422 if *response_format*
+                is unknown.
+        """
+        file_bytes = await file.read()
+        if not file_bytes:
+            raise HTTPException(status_code=400, detail="Empty audio file.")
+
+        audio = _audio_data_from_upload(file_bytes)
+        lang = language or "auto"
+
+        start = time.time()
+        transcript = model.process_audio(audio, lang) or ""
+        duration = time.time() - start
+
+        fmt = (response_format or "json").lower()
+
+        if fmt == "text":
+            return PlainTextResponse(content=transcript)
+
+        if fmt == "srt":
+            srt = f"1\n00:00:00,000 --> 00:00:{duration:06.3f}\n{transcript}\n\n"
+            return PlainTextResponse(content=srt, media_type="text/plain")
+
+        if fmt == "vtt":
+            vtt = f"WEBVTT\n\n00:00:00.000 --> 00:00:{duration:06.3f}\n{transcript}\n\n"
+            return PlainTextResponse(content=vtt, media_type="text/plain")
+
+        if fmt == "verbose_json":
+            obj = VerboseTranscriptionResponse(
+                language=lang if lang != "auto" else "en",
+                duration=round(duration, 3),
+                text=transcript,
+                segments=[
+                    TranscriptionSegment(
+                        id=0,
+                        start=0.0,
+                        end=round(duration, 3),
+                        text=transcript,
+                    )
+                ] if transcript else [],
+            )
+            return JSONResponse(content=obj.model_dump())
+
+        if fmt == "json":
+            return JSONResponse(content={"text": transcript})
+
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported response_format: {response_format!r}. "
+                   f"Use one of: json, text, verbose_json, srt, vtt.",
+        )
+
+    @router.post(
+        "/audio/transcriptions",
+        summary="Transcribe audio (OpenAI Whisper-compatible)",
+    )
+    async def transcriptions(
+        file: UploadFile = File(..., description="Audio file to transcribe."),
+        model_name: str = Form(..., alias="model", description="Model name (accepted, ignored)."),
+        language: Optional[str] = Form(default=None, description="BCP-47 language code."),
+        prompt: Optional[str] = Form(default=None, description="Prompt hint (accepted, ignored)."),
+        response_format: Optional[str] = Form(default="json", description="Response format."),
+        temperature: Optional[float] = Form(default=0.0, description="Sampling temperature (ignored)."),
+        timestamp_granularities: Optional[str] = Form(default=None, description="Granularities (ignored)."),
+    ):
+        """Transcribe audio to text using the OVOS STT plugin.
+
+        Accepts ``multipart/form-data`` as sent by the official ``openai``
+        Python SDK.  The ``model`` field is required for SDK compatibility but
+        is not forwarded to the OVOS engine.
+
+        Args:
+            file: Uploaded audio file (WAV, MP3, OGG, FLAC, …).
+            model_name: Whisper model name (e.g. ``whisper-1``); accepted but
+                ignored — the OVOS plugin is always used.
+            language: Optional BCP-47 language tag.  Defaults to ``auto``.
+            prompt: Optional transcription hint; accepted, not used.
+            response_format: Output format — ``json`` (default), ``text``,
+                ``verbose_json``, ``srt``, or ``vtt``.
+            temperature: Sampling temperature; accepted, not used.
+            timestamp_granularities: Word/segment granularity; accepted, not
+                used.
+
+        Returns:
+            ``{"text": "..."}`` for ``json`` (default), plain text for
+            ``text``/``srt``/``vtt``, or a verbose object for
+            ``verbose_json``.
+        """
+        return await _transcribe(file, language, response_format or "json", temperature or 0.0)
+
+    @router.post(
+        "/audio/translations",
+        summary="Translate audio to English (OpenAI Whisper-compatible)",
+    )
+    async def translations(
+        file: UploadFile = File(..., description="Audio file to translate."),
+        model_name: str = Form(..., alias="model", description="Model name (accepted, ignored)."),
+        prompt: Optional[str] = Form(default=None, description="Prompt hint (accepted, ignored)."),
+        response_format: Optional[str] = Form(default="json", description="Response format."),
+        temperature: Optional[float] = Form(default=0.0, description="Sampling temperature (ignored)."),
+    ):
+        """Translate audio to English text using the OVOS STT plugin.
+
+        The OVOS engine always transcribes in the detected or specified
+        language; true translation is not performed.  This endpoint exists so
+        that SDK callers targeting ``/audio/translations`` receive a valid
+        response without errors.
 
         Args:
             file: Uploaded audio file.
-            language: Optional language hint passed to the STT plugin.
-            response_format: One of json, text, srt, vtt, verbose_json.
-            task: Task type for verbose response metadata.
-            translate_to_en: If True, after STT run the text through the
-                OVOS translator to produce English output. The STT plugin
-                runs in the audio's actual language (auto-detect if no
-                language hint), matching what OpenAI's /audio/translations
-                does upstream.
+            model_name: Whisper model name; accepted, ignored.
+            prompt: Optional hint; accepted, not used.
+            response_format: Output format (same options as transcriptions).
+            temperature: Sampling temperature; accepted, not used.
 
         Returns:
-            Transcription response in the requested format.
+            Same format as ``/audio/transcriptions``.
         """
-        file_bytes = await file.read()
-        audio = multipart_audio_to_audiodata(file_bytes, file.filename or "audio.wav")
-        source_lang = language or "auto"
-        start = time.time()
-        text = model.process_audio(audio, source_lang)
-
-        output_lang = source_lang
-        if translate_to_en and text:
-            if translator is None:
-                raise HTTPException(
-                    status_code=503,
-                    detail="No OVOS translation plugin loaded. "
-                           "Start the server with --translate-plugin <name>.",
-                )
-            try:
-                text = translator.translate(text, target="en",
-                                            source=None if source_lang == "auto"
-                                            else source_lang)
-            except Exception as exc:
-                raise HTTPException(
-                    status_code=502,
-                    detail=f"Translation failed: {exc}",
-                )
-            output_lang = "en"
-
-        lang = output_lang
-        duration = time.time() - start
-
-        if response_format == "text":
-            return PlainTextResponse(text)
-        elif response_format == "srt":
-            total = int(duration)
-            hours, rem = divmod(total, 3600)
-            minutes, seconds = divmod(rem, 60)
-            srt = (
-                f"1\n00:00:00,000 --> "
-                f"{hours:02d}:{minutes:02d}:{seconds:02d},000\n{text}\n"
-            )
-            return PlainTextResponse(srt)
-        elif response_format == "vtt":
-            total = int(duration)
-            hours, rem = divmod(total, 3600)
-            minutes, seconds = divmod(rem, 60)
-            vtt = (
-                f"WEBVTT\n\n00:00:00.000 --> "
-                f"{hours:02d}:{minutes:02d}:{seconds:02d}.000\n{text}\n"
-            )
-            return PlainTextResponse(vtt)
-        elif response_format == "verbose_json":
-            resp = WhisperVerboseResponse(
-                task=task,
-                language=lang,
-                duration=duration,
-                text=text,
-                segments=[],
-            )
-            return JSONResponse(resp.model_dump())
-        else:
-            return JSONResponse(WhisperTranscriptionResponse(text=text).model_dump())
-
-    @router.post("/v1/audio/transcriptions")
-    async def transcriptions(
-            file: UploadFile = File(...),
-            model_name: Optional[str] = Form(default=None, alias="model"),
-            language: Optional[str] = Form(default=None),
-            response_format: _ResponseFormat = Form(default="json"),
-            temperature: Annotated[Optional[float], Field(ge=0.0, le=1.0)] = Form(default=None),
-            authorization: Optional[str] = Header(default=None),
-    ):
-        """Transcribe audio (OpenAI Whisper-compatible).
-
-        Args:
-            file: Audio file to transcribe.
-            model_name: Model identifier (accepted, ignored).
-            language: Optional language hint (BCP-47 code).
-            response_format: Output format: json, text, srt, vtt, verbose_json.
-            temperature: Sampling temperature 0–1 (accepted, ignored).
-            authorization: Bearer token (accepted, ignored).
-
-        Returns:
-            Transcription in the requested format.
-        """
-        return await _transcribe(file, language, response_format)
-
-    @router.post("/v1/audio/translations")
-    async def translations(
-            file: UploadFile = File(...),
-            model_name: Optional[str] = Form(default=None, alias="model"),
-            response_format: _ResponseFormat = Form(default="json"),
-            temperature: Annotated[Optional[float], Field(ge=0.0, le=1.0)] = Form(default=None),
-            authorization: Optional[str] = Header(default=None),
-    ):
-        """Translate audio to English (OpenAI Whisper-compatible).
-
-        Forces language to 'en' regardless of audio language.
-
-        Args:
-            file: Audio file to translate.
-            model_name: Model identifier (accepted, ignored).
-            response_format: Output format: json, text, srt, vtt, verbose_json.
-            temperature: Sampling temperature 0–1 (accepted, ignored).
-            authorization: Bearer token (accepted, ignored).
-
-        Returns:
-            Transcription in the requested format with forced English output.
-        """
-        return await _transcribe(file, None, response_format, task="translate", translate_to_en=True)
+        # Language forced to "en" for translation semantics.
+        return await _transcribe(file, "en", response_format or "json", temperature or 0.0)
 
     return router

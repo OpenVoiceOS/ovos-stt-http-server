@@ -1,66 +1,72 @@
-"""Live test: hit our /openai router with the real OpenAI Python SDK."""
-import io
+# Licensed under the Apache License, Version 2.0
+"""Live integration test: drive the official openai SDK against our /v1 router.
 
+The official ``openai`` SDK sends multipart/form-data to ``POST /audio/transcriptions``.
+This test spins up a real uvicorn server with a FakeSTTEngine and verifies that
+``openai.OpenAI(base_url=...).audio.transcriptions.create(...)`` works end-to-end.
+"""
 import pytest
 
 from test.integration.conftest import make_silent_wav, run_live_server
 
 
-class FakeTranslator:
-    """Stand-in OVOS translator that prefixes the source-lang tag.
-
-    Lets the live test assert /translations actually ran STT output through
-    a translator (rather than just labelling the response as English) without
-    requiring the public OVOS translate server in CI.
-    """
-
-    def translate(self, text, target=None, source=None):
-        return f"[{source or 'auto'}->{target}] {text}"
-
-
 @pytest.fixture(scope="module")
 def base_url():
+    """Live uvicorn server with the openai_whisper router registered."""
     from ovos_stt_http_server.routers.openai_whisper import make_openai_whisper_router
 
     def register(app, model):
-        app.include_router(make_openai_whisper_router(model, translator=FakeTranslator()))
+        app.include_router(make_openai_whisper_router(model))
 
     yield from run_live_server(register)
 
 
-def test_transcriptions_json(base_url):
+def test_transcriptions_via_openai_sdk(base_url):
+    """Official openai SDK transcriptions.create hits our router and returns text."""
     openai = pytest.importorskip("openai")
-    client = openai.OpenAI(base_url=f"{base_url}/openai/v1", api_key="ignored")
-    wav = make_silent_wav()
-    r = client.audio.transcriptions.create(
-        model="whisper-1",
-        file=("clip.wav", io.BytesIO(wav), "audio/wav"),
+
+    client = openai.OpenAI(
+        api_key="ignored",
+        base_url=f"{base_url}/v1",
     )
-    assert r.text == "hello world"
+    wav_bytes = make_silent_wav(0.1)
+    result = client.audio.transcriptions.create(
+        file=("audio.wav", wav_bytes, "audio/wav"),
+        model="whisper-1",
+    )
+    assert result.text == "hello world"
 
 
-def test_transcriptions_text_format(base_url):
+def test_transcriptions_verbose_json_via_sdk(base_url):
+    """verbose_json response_format returns a TranscriptionVerbose-compatible dict."""
     openai = pytest.importorskip("openai")
-    client = openai.OpenAI(base_url=f"{base_url}/openai/v1", api_key="ignored")
-    wav = make_silent_wav()
-    r = client.audio.transcriptions.create(
-        model="whisper-1",
-        file=("clip.wav", io.BytesIO(wav), "audio/wav"),
-        response_format="text",
+
+    client = openai.OpenAI(
+        api_key="ignored",
+        base_url=f"{base_url}/v1",
     )
-    # SDK returns plain str for text response_format
-    assert "hello world" in str(r)
+    wav_bytes = make_silent_wav(0.1)
+    result = client.audio.transcriptions.create(
+        file=("audio.wav", wav_bytes, "audio/wav"),
+        model="whisper-1",
+        response_format="verbose_json",
+    )
+    assert result.text == "hello world"
+    assert hasattr(result, "duration")
+    assert hasattr(result, "language")
 
 
-def test_translations_runs_through_translator(base_url):
-    """The /translations endpoint must invoke the OVOS translator, not just
-    label STT output as English."""
+def test_translations_via_openai_sdk(base_url):
+    """Official openai SDK translations.create hits our /audio/translations route."""
     openai = pytest.importorskip("openai")
-    client = openai.OpenAI(base_url=f"{base_url}/openai/v1", api_key="ignored")
-    wav = make_silent_wav()
-    r = client.audio.translations.create(
-        model="whisper-1",
-        file=("clip.wav", io.BytesIO(wav), "audio/wav"),
+
+    client = openai.OpenAI(
+        api_key="ignored",
+        base_url=f"{base_url}/v1",
     )
-    # FakeTranslator prefixed the STT text — proves the translator ran.
-    assert r.text == "[auto->en] hello world"
+    wav_bytes = make_silent_wav(0.1)
+    result = client.audio.translations.create(
+        file=("audio.wav", wav_bytes, "audio/wav"),
+        model="whisper-1",
+    )
+    assert result.text == "hello world"
