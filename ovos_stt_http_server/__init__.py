@@ -179,6 +179,8 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     from ovos_stt_http_server.routers.utcp import make_utcp_router
     app.include_router(make_chromium_router(model))
     app.include_router(make_utcp_router())
+    from ovos_stt_http_server.routers.vosk_webrtc import make_vosk_webrtc_router
+    app.include_router(make_vosk_webrtc_router(model))
 
     # Mount MCP server when the optional dependency is available.
     try:
