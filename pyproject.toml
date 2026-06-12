@@ -30,7 +30,7 @@ dependencies = [
 
 [project.optional-dependencies]
 audio = ["pydub"]
-test = ["pytest", "httpx", "pytest-cov", "python-multipart", "requests"]
+test = ["pytest", "httpx", "pytest-cov", "python-multipart", "requests", "paho-mqtt", "amqtt"]
 mcp = ["mcp>=1.0.0"]
 
 [project.urls]
