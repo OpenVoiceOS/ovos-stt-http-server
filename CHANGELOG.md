@@ -11,6 +11,7 @@
 
 **Merged pull requests:**
 
+- feat\(compat\): vosk-server gRPC variant \(StreamingRecognize\) [\#78](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/78) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): OpenAI Whisper-compatible STT router \(/v1/audio/transcriptions\) [\#77](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/77) ([JarbasAl](https://github.com/JarbasAl))
 - feat: expose STT via MCP and UTCP [\#75](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/75) ([JarbasAl](https://github.com/JarbasAl))
 - ci: scope coverage to source package only [\#73](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/73) ([JarbasAl](https://github.com/JarbasAl))
