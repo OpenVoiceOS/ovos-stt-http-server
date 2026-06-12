@@ -26,6 +26,7 @@ class _SttServicer(pb_grpc.SttServiceServicer):
     """Streaming gRPC service backed by an OVOS STT model container."""
 
     def __init__(self, model) -> None:
+        """Initialise with a model container that exposes ``process_audio``."""
         self._model = model
 
     async def StreamingRecognize(
@@ -33,6 +34,16 @@ class _SttServicer(pb_grpc.SttServiceServicer):
             request_iterator: AsyncIterator[pb.StreamingRecognitionRequest],
             context: grpc.aio.ServicerContext,
     ) -> AsyncIterator[pb.StreamingRecognitionResponse]:
+        """Buffer incoming audio chunks, transcribe once, yield a single final response.
+
+        The first ``StreamingRecognitionRequest`` in the stream must carry a
+        ``RecognitionConfig`` (``config`` oneof variant) to set ``sample_rate_hertz``
+        and ``language_code``.  All subsequent requests with ``audio_content`` bytes are
+        concatenated into a single PCM buffer.  When the client closes the stream the
+        buffer is decoded by the OVOS STT model and the transcript is returned as a
+        single ``StreamingRecognitionResponse`` with ``final=True`` and
+        ``end_of_utterance=True``.
+        """
         buffer = bytearray()
         sample_rate = 16000
         language = "en"
