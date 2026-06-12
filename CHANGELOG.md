@@ -16,6 +16,7 @@
 - docs: voice-pihole hub — /docs index + centralised nginx recipes [\#70](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/70) ([JarbasAl](https://github.com/JarbasAl))
 - feat: kaldi-gstreamer-server-compatible router \(/client\) [\#69](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/69) ([JarbasAl](https://github.com/JarbasAl))
 - feat: Chromium / Chrome Web Speech API compat router \(/speech-api/v2\) [\#68](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/68) ([JarbasAl](https://github.com/JarbasAl))
+- feat: whisper.cpp HTTP server-compatible router \(/whisper-cpp\) [\#64](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/64) ([JarbasAl](https://github.com/JarbasAl))
 - feat: vosk-server-compatible WebSocket router \(/vosk\) [\#63](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/63) ([JarbasAl](https://github.com/JarbasAl))
 - feat: Wit.ai-compatible /speech router \(/wit\) [\#62](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/62) ([JarbasAl](https://github.com/JarbasAl))
 - feat: IBM Watson Speech-to-Text compat router \(/watson/speech-to-text\) [\#61](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/61) ([JarbasAl](https://github.com/JarbasAl))
