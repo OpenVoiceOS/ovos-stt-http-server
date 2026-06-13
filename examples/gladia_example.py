@@ -3,6 +3,9 @@
 Gladia's API is asynchronous; ovos-stt-http-server runs the OVOS engine
 synchronously, so the job is already ``done`` on the first poll.
 
+Gladia has **no official Python SDK** (it is consumed over its REST API), so
+this example calls the HTTP endpoints directly rather than driving a vendor SDK.
+
 Prerequisites:
     pip install requests
     ovos-stt-server --engine <some-ovos-stt-plugin> --port 8080
