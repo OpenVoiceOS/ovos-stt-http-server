@@ -220,6 +220,12 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     from ovos_stt_http_server.routers.aws_transcribe import make_aws_transcribe_router
     app.include_router(make_aws_transcribe_router(model))
     app.include_router(make_deepgram_router(model))
+    from ovos_stt_http_server.routers.groq import make_groq_router
+    app.include_router(make_groq_router(model))
+    from ovos_stt_http_server.routers.gladia import make_gladia_router
+    app.include_router(make_gladia_router(model))
+    from ovos_stt_http_server.routers.elevenlabs_scribe import make_elevenlabs_scribe_router
+    app.include_router(make_elevenlabs_scribe_router(model))
 
     # Mount MCP server when the optional dependency is available.
     try:

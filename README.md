@@ -42,6 +42,30 @@ options:
 
 eg `ovos-stt-server --engine ovos-stt-plugin-fasterwhisper --lang-engine ovos-audio-transformer-plugin-fasterwhisper`
 
+## Vendor-compatible endpoints
+
+Besides the native `/stt` endpoint, the server mounts drop-in compatibility
+routers so existing clients of popular STT APIs can be repointed at a
+self-hosted OVOS plugin. Each is mounted under its own prefix:
+
+| Vendor | Prefix | Endpoint | Auth field (accepted, ignored) |
+|---|---|---|---|
+| OpenAI Whisper | `/v1` | `POST /v1/audio/transcriptions` | `Authorization: Bearer` |
+| Groq | `/groq` | `POST /groq/openai/v1/audio/transcriptions` | `Authorization: Bearer` |
+| ElevenLabs Scribe | `/elevenlabs` | `POST /elevenlabs/v1/speech-to-text` | `xi-api-key` |
+| Gladia | `/gladia` | `POST /v2/upload` → `POST /v2/transcription` → `GET /v2/transcription/{id}` | `x-gladia-key` |
+| Deepgram | `/deepgram` | `POST /deepgram/v1/listen` (+ WS) | `Authorization: Token` |
+| AssemblyAI, Speechmatics, Google, Azure, AWS Transcribe, IBM Watson, Wit.ai, Chromium, Kaldi, Vosk, whisper.cpp | see `ovos_stt_http_server/routers/` | — | — |
+
+Point any client SDK at the matching prefix; the `model`/API-key fields are
+accepted for compatibility but the configured OVOS plugin is always used.
+Runnable examples for each vendor SDK live in [`examples/`](examples/) (e.g.
+`groq_example.py`, `elevenlabs_scribe_example.py`, `gladia_example.py`).
+
+Groq is OpenAI-compatible, so the `/groq` prefix differs from `/v1` only by the
+path Groq clients expect (`/openai/v1/...`) and the extra `x_groq` block in the
+response.
+
 ## Docker
 
 you can create easily create a docker file to serve any plugin
