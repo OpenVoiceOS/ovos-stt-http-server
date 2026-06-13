@@ -39,6 +39,8 @@ test = [
     # vendor client SDKs driven by the e2e tests
     "openai", "deepgram-sdk", "assemblyai", "boto3", "google-cloud-speech",
     "ibm-watson", "speechmatics-batch", "speechmatics-rt", "wit", "elevenlabs", "groq",
+    # SpeechRecognition-backed chromium SDK e2e test
+    "SpeechRecognition", "ovos-stt-plugin-chromium",
     # self-hosted / streaming protocol clients
     "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt",
     # MCP server, exercised by the MCP/UTCP tests
