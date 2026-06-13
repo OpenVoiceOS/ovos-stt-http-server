@@ -195,6 +195,12 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     from ovos_stt_http_server.routers.deepgram import make_deepgram_router
     app.include_router(make_chromium_router(model))
     app.include_router(make_utcp_router())
+    # vosk-webrtc needs the optional aiortc dependency
+    try:
+        from ovos_stt_http_server.routers.vosk_webrtc import make_vosk_webrtc_router
+        app.include_router(make_vosk_webrtc_router(model))
+    except ImportError:
+        LOG.debug("aiortc not installed; skipping vosk-webrtc router")
     from ovos_stt_http_server.routers.openai_whisper import make_openai_whisper_router
     app.include_router(make_openai_whisper_router(model, translator=_load_translator()))
     from ovos_stt_http_server.routers.whisper_cpp_server import make_whisper_cpp_server_router
