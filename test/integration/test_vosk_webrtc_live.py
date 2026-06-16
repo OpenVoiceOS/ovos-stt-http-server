@@ -19,8 +19,12 @@ from test.integration.conftest import run_live_server
 
 @pytest.fixture(scope="module")
 def base_url():
-    # aiortc is imported lazily inside the router, so check it directly
-    import aiortc
+    # aiortc builds against system ffmpeg-7 dev headers (via PyAV) and ships no
+    # wheels for the newest CI Python, so it cannot be a required dependency.
+    # The webrtc router is itself optional (ImportError-gated in create_app),
+    # so this single e2e skips when aiortc is absent — install the `test-webrtc`
+    # extra to run it.
+    pytest.importorskip("aiortc")
     from ovos_stt_http_server.routers.vosk_webrtc import make_vosk_webrtc_router
 
     def register(app, model):

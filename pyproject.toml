@@ -38,12 +38,17 @@ test = [
     "pydub",
     # vendor client SDKs driven by the e2e tests
     "openai", "deepgram-sdk", "assemblyai", "boto3", "google-cloud-speech",
-    "ibm-watson", "speechmatics-batch", "speechmatics-rt", "wit", "SpeechRecognition",
+    "ibm-watson", "speechmatics-batch", "speechmatics-rt", "wit",
     # self-hosted / streaming protocol clients
-    "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt", "aiortc",
+    "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt",
     # MCP server, exercised by the MCP/UTCP tests
     "mcp>=1.0.0",
 ]
+# vosk-webrtc needs aiortc, which builds against system ffmpeg-7 dev headers and
+# has no wheels for the newest Python in the CI matrix. It is therefore kept out
+# of the required `test` extra; its e2e test skips when aiortc is absent (the
+# webrtc router is itself an optional, ImportError-gated feature of the server).
+test-webrtc = ["aiortc"]
 mcp = ["mcp>=1.0.0"]
 
 [project.urls]
