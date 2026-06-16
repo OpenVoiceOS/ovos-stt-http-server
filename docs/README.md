@@ -26,6 +26,7 @@ is in [`../examples/`](../examples/); full reference in
 | Vendor | Prefix |
 | :--- | :--- |
 | OpenAI Whisper | `/v1/audio/{transcriptions,translations}` |
+| Groq | `/groq/openai/v1/audio/transcriptions` |
 | Deepgram | `/deepgram/v1/listen` (HTTP + WS) |
 | Google Cloud STT | `/google/v1/speech:recognize` |
 | AssemblyAI | `/assemblyai/v2/{upload,transcript,realtime/ws}` |

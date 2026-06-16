@@ -28,6 +28,7 @@ client script for each is in [`../examples/`](../examples/).
 | Vendor | Method | Path | Client / example |
 | :--- | :--- | :--- | :--- |
 | OpenAI Whisper | POST | `/v1/audio/transcriptions`, `/v1/audio/translations` | official `openai` — [`openai_whisper_example.py`](../examples/openai_whisper_example.py) |
+| Groq | POST | `/groq/openai/v1/audio/transcriptions` | official `groq` — [`groq_example.py`](../examples/groq_example.py) — OpenAI-compatible, returns an extra `x_groq` block |
 | Deepgram | POST / WS | `/deepgram/v1/listen` | official `deepgram-sdk` — [`deepgram_example.py`](../examples/deepgram_example.py) |
 | Google Cloud STT | POST | `/google/v1/speech:recognize` | HTTP — [`../examples/`](../examples/) |
 | AssemblyAI | POST / GET / WS | `/assemblyai/v2/upload`, `/assemblyai/v2/transcript`, realtime WS | official `assemblyai` — [`assemblyai_example.py`](../examples/assemblyai_example.py) |

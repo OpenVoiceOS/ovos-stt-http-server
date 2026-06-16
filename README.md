@@ -222,6 +222,7 @@ proxy's job.
 | Vendor | Prefix | Client (see `examples/`) |
 |--------|--------|--------------------------|
 | OpenAI Whisper | `/v1/audio/transcriptions` | official `openai` |
+| Groq | `/groq/openai/v1/audio/transcriptions` | official `groq` |
 | Deepgram | `/deepgram/v1/listen` | official `deepgram-sdk` |
 | Google Cloud STT | `/google/v1/speech:recognize` | HTTP |
 | AssemblyAI | `/assemblyai/v2/...` | official `assemblyai` |
