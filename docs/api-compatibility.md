@@ -16,47 +16,52 @@ non-WAV inputs via `pydub`.
 The shared network-redirect concept lives in
 [`voice-pihole.md`](voice-pihole.md); per-vendor sections cross-reference it.
 
-Status reflects merge state into `dev`:
+---
 
-- ✅ **merged** — full per-vendor docs section below the index.
-- 🟡 **open** — PR is up; full docs on the feature branch.
+## Available now
 
-## Commercial cloud STT
+These routers are mounted by `create_app()` and live on `dev`. A runnable
+client script for each is in [`../examples/`](../examples/).
 
-| Vendor | Prefix | Status | PR |
+### Commercial cloud STT
+
+| Vendor | Method | Path | Client / example |
 | :--- | :--- | :--- | :--- |
-| OpenAI Whisper | `/openai` | 🟡 open | [#53](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/53) |
-| Deepgram | `/deepgram` | 🟡 open | [#54](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/54) |
-| Google Cloud STT | `/google` | 🟡 open | [#55](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/55) |
-| AssemblyAI | `/assemblyai/v2` | 🟡 open | [#56](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/56) |
-| Speechmatics | `/speechmatics/v1` | 🟡 open | [#57](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/57) |
-| Microsoft Azure Speech | `/azure-stt` | 🟡 open | [#58](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/58) |
-| AWS Transcribe | `/aws` | 🟡 open | [#60](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/60) |
-| IBM Watson STT | `/watson/speech-to-text` | 🟡 open | [#61](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/61) |
-| Wit.ai | `/wit` | 🟡 open | [#62](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/62) |
-| Chromium Web Speech | `/speech-api/v2` | ✅ merged |
+| OpenAI Whisper | POST | `/openai/v1/audio/transcriptions`, `/openai/v1/audio/translations` | official `openai` — [`openai_whisper_example.py`](../examples/openai_whisper_example.py) |
+| Deepgram | POST / WS | `/deepgram/v1/listen` | official `deepgram-sdk` — [`deepgram_example.py`](../examples/deepgram_example.py) |
+| Google Cloud STT | POST | `/google/v1/speech:recognize` | HTTP — [`../examples/`](../examples/) |
+| AssemblyAI | POST / GET / WS | `/assemblyai/v2/upload`, `/assemblyai/v2/transcript`, realtime WS | official `assemblyai` — [`assemblyai_example.py`](../examples/assemblyai_example.py) |
+| Speechmatics | POST / GET / WS | `/speechmatics/...` batch jobs + realtime WS | official `speechmatics-batch` — [`speechmatics_example.py`](../examples/speechmatics_example.py) |
+| Microsoft Azure Speech | POST / WS | `/azure-stt/cognitiveservices/v1` | HTTP — [`azure_stt_example.py`](../examples/azure_stt_example.py) |
+| AWS Transcribe | POST / WS | `/aws/transcribe` (batch) + streaming WS | official `boto3` — [`aws_transcribe_example.py`](../examples/aws_transcribe_example.py) |
+| IBM Watson STT | POST / WS | `/watson/speech-to-text/v1/recognize` | official `ibm-watson` — [`ibm_watson_example.py`](../examples/ibm_watson_example.py) |
+| Wit.ai | POST | `/wit/speech` | official `wit` — [`wit_ai_example.py`](../examples/wit_ai_example.py) |
+| Chromium Web Speech | POST | `/speech-api/v2/recognize` | `ovos-stt-plugin-chromium` — [`chromium_example.py`](../examples/chromium_example.py) — [details below](#chromium--chrome-web-speech-api-speech-apiv2) |
 
-## Self-hosted / OSS server protocols
+### Self-hosted / OSS server protocols
 
-| Server | Surface | Status | PR |
+| Server | Method | Path | Client / example |
 | :--- | :--- | :--- | :--- |
-| vosk-server (WebSocket) | `/vosk` | 🟡 open | [#63](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/63) |
-| vosk-server (gRPC) | `--vosk-grpc-port` | 🟡 open | [#65](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/65) |
-| vosk-server (WebRTC) | `/vosk-webrtc/offer` | 🟡 open | [#66](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/66) |
-| vosk-server (MQTT) | `--vosk-mqtt-broker` | 🟡 open | [#67](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/67) |
-| kaldi-gstreamer-server | `/client/ws/speech` + `/client/dynamic/recognize` | 🟡 open | [#69](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/69) |
-| whisper.cpp HTTP server | `/whisper-cpp/inference` | 🟡 open | [#64](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/64) |
-| faster-whisper-server | re-uses `/openai/v1` | 🟡 open | [#72](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/72) |
-| Wyoming (HA) | external adapter | ✅ merged | see [`wyoming-integration.md`](wyoming-integration.md) |
+| whisper.cpp HTTP server | POST | `/whisper-cpp/inference` (and OpenAI alias `/whisper-cpp/v1/audio/transcriptions`) | HTTP — [`whisper_cpp_example.py`](../examples/whisper_cpp_example.py) |
+| vosk-server (WebRTC) | POST | `/vosk-webrtc/offer` | requires the optional `aiortc` dependency |
+| OpenAI-compatible Whisper hosts | POST | `/openai/v1/audio/transcriptions` | Groq, Cloudflare Workers AI, Fireworks AI, Together AI, OpenRouter, faster-whisper-server — all speak the OpenAI contract, so point them at the `/openai/v1` prefix |
+| Wyoming (Home Assistant) | — | external adapter | see [`wyoming-integration.md`](wyoming-integration.md) |
 
-## OpenAI-compatible Whisper hosts
+## Planned / not mounted by default
 
-| Hosts | Status | PR |
+These routers exist in the package but are **not** mounted by `create_app()` in
+the default application (they need extra dependencies, a separate process, or a
+dedicated CLI flag) and are tracked for a future release:
+
+| Server | Surface | Notes |
 | :--- | :--- | :--- |
-| Groq, Cloudflare Workers AI, Fireworks AI, Together AI, OpenRouter | 🟡 open | [#71](https://github.com/OpenVoiceOS/ovos-stt-http-server/pull/71) |
+| vosk-server (WebSocket) | `/vosk` | router present, not mounted in the default app |
+| vosk-server (gRPC) | `--vosk-grpc-port` | separate gRPC service |
+| vosk-server (MQTT) | `--vosk-mqtt-broker` | separate MQTT bridge |
+| kaldi-gstreamer-server | `/client/ws/speech`, `/client/ws/status` | router present, not mounted in the default app |
 
-Apps targeting these hosts already speak the OpenAI `/v1/audio/transcriptions`
-contract — point them at our `/openai/v1` prefix.
+For streaming-partial-transcript limitations and additional vendor gaps, see
+the project `TODO.md`.
 
 ---
 
