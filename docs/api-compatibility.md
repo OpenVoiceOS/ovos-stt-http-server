@@ -31,6 +31,7 @@ client script for each is in [`../examples/`](../examples/).
 | Deepgram | POST / WS | `/deepgram/v1/listen` | official `deepgram-sdk` — [`deepgram_example.py`](../examples/deepgram_example.py) |
 | Google Cloud STT | POST | `/google/v1/speech:recognize` | HTTP — [`../examples/`](../examples/) |
 | AssemblyAI | POST / GET / WS | `/assemblyai/v2/upload`, `/assemblyai/v2/transcript`, realtime WS | official `assemblyai` — [`assemblyai_example.py`](../examples/assemblyai_example.py) |
+| Gladia | POST / GET | `/gladia/v2/upload` → `/gladia/v2/transcription` → `/gladia/v2/transcription/{id}` | HTTP (no SDK) — [`gladia_example.py`](../examples/gladia_example.py) |
 | Speechmatics | POST / GET / WS | `/speechmatics/...` batch jobs + realtime WS | official `speechmatics-batch` — [`speechmatics_example.py`](../examples/speechmatics_example.py) |
 | Microsoft Azure Speech | POST / WS | `/azure-stt/cognitiveservices/v1` | HTTP — [`azure_stt_example.py`](../examples/azure_stt_example.py) |
 | AWS Transcribe | POST / WS | `/aws/transcribe` (batch) + streaming WS | official `boto3` — [`aws_transcribe_example.py`](../examples/aws_transcribe_example.py) |

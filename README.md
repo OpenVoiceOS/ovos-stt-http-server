@@ -225,6 +225,7 @@ proxy's job.
 | Deepgram | `/deepgram/v1/listen` | official `deepgram-sdk` |
 | Google Cloud STT | `/google/v1/speech:recognize` | HTTP |
 | AssemblyAI | `/assemblyai/v2/...` | official `assemblyai` |
+| Gladia | `/gladia/v2/transcription` | HTTP (upload → poll) |
 | Speechmatics | `/speechmatics/...` | official `speechmatics-batch` |
 | Microsoft Azure Speech | `/azure-stt/cognitiveservices/v1` | HTTP |
 | AWS Transcribe | `/aws/...` | official `boto3` |
