@@ -229,6 +229,7 @@ proxy's job.
 | Microsoft Azure Speech | `/azure-stt/cognitiveservices/v1` | HTTP |
 | AWS Transcribe | `/aws/...` | official `boto3` |
 | IBM Watson STT | `/watson/speech-to-text/v1/recognize` | official `ibm-watson` |
+| ElevenLabs Scribe | `/elevenlabs/v1/speech-to-text` | official `elevenlabs` |
 | Wit.ai | `/wit/speech` | official `wit` |
 | Chromium Web Speech | `/speech-api/v2/recognize` | `ovos-stt-plugin-chromium` |
 | whisper.cpp server | `/inference` | HTTP |

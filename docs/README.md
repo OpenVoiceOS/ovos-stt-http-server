@@ -33,6 +33,7 @@ is in [`../examples/`](../examples/); full reference in
 | Microsoft Azure Speech | `/azure-stt/cognitiveservices/v1` (REST + WS) |
 | AWS Transcribe | `/aws/transcribe` (batch + streaming WS) |
 | IBM Watson STT | `/watson/speech-to-text/v1/recognize` (REST + WS) |
+| ElevenLabs Scribe | `/elevenlabs/v1/speech-to-text` |
 | Wit.ai (Meta) | `/wit/speech` |
 | Chromium Web Speech | `/speech-api/v2/recognize` |
 
