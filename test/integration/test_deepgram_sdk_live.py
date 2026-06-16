@@ -19,7 +19,7 @@ def base_url():
 
 
 def test_transcribe_file_via_sdk(base_url):
-    deepgram = pytest.importorskip("deepgram")
+    import deepgram
     DeepgramClient = deepgram.DeepgramClient
     DeepgramClientEnvironment = deepgram.DeepgramClientEnvironment
 

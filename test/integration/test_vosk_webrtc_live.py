@@ -20,7 +20,7 @@ from test.integration.conftest import run_live_server
 @pytest.fixture(scope="module")
 def base_url():
     # aiortc is imported lazily inside the router, so check it directly
-    pytest.importorskip("aiortc", reason="aiortc not installed")
+    import aiortc
     from ovos_stt_http_server.routers.vosk_webrtc import make_vosk_webrtc_router
 
     def register(app, model):
@@ -30,7 +30,7 @@ def base_url():
 
 
 def test_offer_answer_contract(base_url):
-    aiortc = pytest.importorskip("aiortc")
+    import aiortc
     import requests
     from aiortc import RTCPeerConnection
 

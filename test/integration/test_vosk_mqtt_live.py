@@ -26,8 +26,8 @@ def _free_port() -> int:
 
 @pytest.fixture
 def broker():
-    pytest.importorskip("amqtt")
-    pytest.importorskip("paho.mqtt.client")
+    import amqtt
+    import paho.mqtt.client
     from amqtt.broker import Broker
 
     port = _free_port()

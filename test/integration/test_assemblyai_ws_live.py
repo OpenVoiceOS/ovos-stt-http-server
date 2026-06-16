@@ -24,7 +24,7 @@ def base_url():
 
 
 def test_streaming_v3_via_sdk(base_url):
-    pytest.importorskip("assemblyai")
+    import assemblyai
     from assemblyai.streaming.v3 import (
         StreamingClient,
         StreamingClientOptions,

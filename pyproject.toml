@@ -30,7 +30,20 @@ dependencies = [
 
 [project.optional-dependencies]
 audio = ["pydub"]
-test = ["pytest", "httpx", "pytest-cov", "python-multipart", "requests", "uvicorn", "websockets", "deepgram-sdk", "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt"]
+# Vendor SDKs are required (not optional) so the official-SDK end-to-end tests
+# under test/integration/*_sdk_live.py actually run in CI instead of being
+# silently skipped by pytest.importorskip.
+test = [
+    "pytest", "httpx", "pytest-cov", "python-multipart", "requests", "uvicorn", "websockets",
+    "pydub",
+    # vendor client SDKs driven by the e2e tests
+    "openai", "deepgram-sdk", "assemblyai", "boto3", "google-cloud-speech",
+    "ibm-watson", "speechmatics-batch", "speechmatics-rt", "wit", "SpeechRecognition",
+    # self-hosted / streaming protocol clients
+    "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt", "aiortc",
+    # MCP server, exercised by the MCP/UTCP tests
+    "mcp>=1.0.0",
+]
 mcp = ["mcp>=1.0.0"]
 
 [project.urls]

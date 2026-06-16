@@ -44,7 +44,8 @@ def make_speechmatics_router(model) -> APIRouter:
     """Create Speechmatics-compatible batch + realtime router.
 
     The returned router mounts at ``/speechmatics`` so that:
-    - ``BatchClient(ConnectionSettings(url='http://host/speechmatics'))``
+    - the ``speechmatics-batch`` ``AsyncClient(url='http://host/speechmatics/v2')``
+      (whose base URL already includes ``/v2`` and which appends ``/jobs``)
       correctly submits to ``/speechmatics/v2/jobs``.
     - ``WebsocketClient(ConnectionSettings(url='ws://host/speechmatics/v2/rt'))``
       correctly connects to ``/speechmatics/v2/rt/{language}``.
@@ -83,6 +84,7 @@ def make_speechmatics_router(model) -> APIRouter:
         content_type = request.headers.get("content-type", "")
         audio_bytes = b""
         language = "en"
+        data_name = "audio"
 
         if "multipart" in content_type:
             form = await request.form()
@@ -100,6 +102,7 @@ def make_speechmatics_router(model) -> APIRouter:
             audio_part = form.get("data_file")
             if audio_part is not None and hasattr(audio_part, "read"):
                 audio_bytes = await audio_part.read()
+                data_name = getattr(audio_part, "filename", None) or data_name
         else:
             audio_bytes = await request.body()
 
@@ -115,6 +118,7 @@ def make_speechmatics_router(model) -> APIRouter:
             "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "transcript": transcript,
             "language": language,
+            "data_name": data_name,
         }
         return JSONResponse({"id": job_id}, status_code=201)
 
@@ -136,6 +140,7 @@ def make_speechmatics_router(model) -> APIRouter:
                 "id": job["job_id"],
                 "status": job["status"],
                 "created_at": job["created_at"],
+                "data_name": job.get("data_name", "audio"),
                 "duration": 1.0,
                 "config": {
                     "type": "transcription",
@@ -177,7 +182,14 @@ def make_speechmatics_router(model) -> APIRouter:
                 ],
             })
         return JSONResponse({
-            "job": {"id": job_id, "status": "done"},
+            "format": "2.9",
+            "job": {
+                "id": job_id,
+                "status": "done",
+                "created_at": job["created_at"],
+                "data_name": job.get("data_name", "audio"),
+                "duration": 1.0,
+            },
             "results": results,
             "metadata": {
                 "created_at": job["created_at"],

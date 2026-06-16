@@ -55,7 +55,7 @@ def test_recognize_with_custom_language_code(base_url):
 # ----------------------------------------------------------------------
 
 def test_recognize_via_sdk_monkey_patch(base_url, monkeypatch):
-    speech_v1 = pytest.importorskip("google.cloud.speech_v1")
+    import google.cloud.speech_v1 as speech_v1
     from google.auth.credentials import AnonymousCredentials
     from google.auth.transport.requests import AuthorizedSession
 

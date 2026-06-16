@@ -22,7 +22,7 @@ def base_url():
 
 
 def test_speech_via_sdk(base_url, monkeypatch):
-    pytest.importorskip("wit")
+    import wit
     # wit reads WIT_URL at module-import time; reload after patching.
     monkeypatch.setenv("WIT_URL", f"{base_url}/wit")
     import importlib

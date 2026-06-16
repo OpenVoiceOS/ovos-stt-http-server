@@ -19,7 +19,7 @@ def base_url():
 
 
 def test_transcribe_via_sdk(base_url, tmp_path, monkeypatch):
-    aai = pytest.importorskip("assemblyai")
+    import assemblyai as aai
     monkeypatch.setattr(aai.settings, "base_url", f"{base_url}/assemblyai")
     monkeypatch.setattr(aai.settings, "api_key", "ignored")
     # The SDK polls /transcript/{id} until status="completed"; ours returns

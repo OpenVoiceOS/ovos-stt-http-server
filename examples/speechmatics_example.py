@@ -17,7 +17,7 @@ OVOS_HOST = "http://localhost:8080"
 
 
 async def transcribe(audio_path: str) -> str:
-    client = AsyncClient(api_key="ignored", url=f"{OVOS_HOST}/speechmatics/v1")
+    client = AsyncClient(api_key="ignored", url=f"{OVOS_HOST}/speechmatics/v2")
     try:
         transcript = await client.transcribe(
             audio_path,

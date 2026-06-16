@@ -25,7 +25,7 @@ def base_url():
 
 
 def test_batch_via_boto3(base_url):
-    boto3 = pytest.importorskip("boto3")
+    import boto3
     # boto3 sends the action to the endpoint_url path verbatim — point it
     # at the exact route, not just the /aws prefix.
     client = boto3.client(
@@ -64,7 +64,7 @@ def test_batch_via_boto3(base_url):
 
 
 def test_streaming_ws(base_url):
-    websockets = pytest.importorskip("websockets.sync.client")
+    import websockets.sync.client as websockets
 
     ws_url = base_url.replace("http://", "ws://") + \
         "/aws/transcribestreaming/stream-transcription?language-code=en-US&sample-rate=16000"

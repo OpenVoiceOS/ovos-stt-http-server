@@ -1,15 +1,18 @@
-"""Live test: drive the canonical ovos-stt-plugin-chromium against our /speech-api.
+"""Live test: drive our /speech-api (Chromium Web Speech) router with a real client.
 
-The plugin POSTs to a hard-coded `http://www.google.com/speech-api/v2/recognize`.
-We monkey-patch `requests.post` (which the plugin uses) to rewrite that URL
-to our local server — exactly what an `/etc/hosts` + nginx redirect would do
-in production, but in-process for a fast CI run.
+The Chromium / Chrome Web Speech API is what ``speech_recognition`` speaks in
+``Recognizer.recognize_google``: a FLAC body POSTed to
+``/speech-api/v2/recognize`` returning newline-delimited JSON. We use
+``speech_recognition`` (the canonical client library) to encode FLAC exactly as
+that path does, then POST to our local server — exactly what an ``/etc/hosts`` +
+reverse-proxy redirect of ``www.google.com`` would achieve in production.
 """
 import io
-import sys
+import json
 import wave
 
 import pytest
+import requests
 
 from test.integration.conftest import make_silent_wav, run_live_server
 
@@ -24,33 +27,32 @@ def base_url():
     yield from run_live_server(register)
 
 
-def test_chromium_plugin_against_our_server(base_url, monkeypatch):
-    pytest.importorskip("ovos_stt_plugin_chromium")
-    pytest.importorskip("speech_recognition")  # transitive — provides FLAC encoder
-
-    # The plugin uses requests.post(url, ...) where url is the hard-coded
-    # Google host. Rewrite it to our base_url.
-    import ovos_stt_plugin_chromium as chromium_mod
-    real_post = chromium_mod.requests.post
-
-    def patched_post(url, *args, **kwargs):
-        if url.startswith("http://www.google.com/speech-api"):
-            url = base_url + "/speech-api" + url.split("/speech-api", 1)[1]
-        return real_post(url, *args, **kwargs)
-
-    monkeypatch.setattr(chromium_mod.requests, "post", patched_post)
-
-    from ovos_stt_plugin_chromium import ChromiumSTT
+def test_chromium_recognize_endpoint(base_url):
     import speech_recognition as sr
 
-    # Plugin needs an AudioData with .get_flac_data() — that's speech_recognition's
-    # type, not OVOS's. Build one from raw PCM.
     wav = make_silent_wav()
     with wave.open(io.BytesIO(wav)) as wf:
         frames = wf.readframes(wf.getnframes())
         rate = wf.getframerate()
+    # speech_recognition.AudioData is the type recognize_google operates on;
+    # get_flac_data() produces the exact FLAC body it would POST.
     audio = sr.AudioData(frames, rate, 2)
+    flac = audio.get_flac_data(convert_rate=16000)
 
-    plugin = ChromiumSTT(config={"lang": "en-us"})
-    text = plugin.execute(audio, language="en-us")
-    assert text == "hello world"
+    resp = requests.post(
+        f"{base_url}/speech-api/v2/recognize?client=chromium&lang=en-us",
+        data=flac,
+        headers={"Content-Type": "audio/x-flac; rate=16000"},
+        timeout=10,
+    )
+    assert resp.status_code == 200
+
+    # Chromium wire format: newline-delimited JSON; the transcript lives in
+    # result[].alternative[].transcript on the non-empty line.
+    transcripts = [
+        alt["transcript"]
+        for line in resp.text.splitlines() if line.strip()
+        for result in json.loads(line).get("result", [])
+        for alt in result.get("alternative", [])
+    ]
+    assert "hello world" in transcripts

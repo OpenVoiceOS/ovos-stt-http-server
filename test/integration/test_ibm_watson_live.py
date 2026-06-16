@@ -24,7 +24,7 @@ def base_url():
 
 
 def test_rest_via_sdk(base_url):
-    ibm_watson = pytest.importorskip("ibm_watson")
+    import ibm_watson
     from ibm_cloud_sdk_core.authenticators import IAMAuthenticator, NoAuthAuthenticator
 
     stt = ibm_watson.SpeechToTextV1(authenticator=NoAuthAuthenticator())
@@ -42,7 +42,7 @@ def test_rest_via_sdk(base_url):
 
 def test_ws_protocol_raw(base_url):
     """Raw WS client speaking Watson's start/audio/stop protocol."""
-    websockets = pytest.importorskip("websockets.sync.client")
+    import websockets.sync.client as websockets
 
     ws_url = base_url.replace("http://", "ws://") + "/watson/speech-to-text/v1/recognize"
     with websockets.connect(ws_url) as ws:
