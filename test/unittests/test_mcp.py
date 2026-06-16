@@ -62,7 +62,7 @@ def _extract_text(content_list) -> str:
 class TestBuildMcpServer:
     @pytest.fixture(autouse=True)
     def _check_mcp(self):
-        pytest.importorskip("mcp", reason="mcp extra not installed")
+        import mcp
 
     def test_returns_fastmcp_instance(self):
         from mcp.server.fastmcp import FastMCP
@@ -111,7 +111,7 @@ class TestBuildMcpServer:
 class TestTranscribeTool:
     @pytest.fixture(autouse=True)
     def _check_mcp(self):
-        pytest.importorskip("mcp", reason="mcp extra not installed")
+        import mcp
 
     def _call(self, model, **kwargs):
         from ovos_stt_http_server.mcp_server import build_mcp_server
@@ -246,7 +246,7 @@ class TestTranscribeTool:
 class TestMountMcpOnFastapi:
     @pytest.fixture(autouse=True)
     def _check_mcp(self):
-        pytest.importorskip("mcp", reason="mcp extra not installed")
+        import mcp
 
     def test_mount_does_not_raise(self):
         from fastapi import FastAPI

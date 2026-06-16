@@ -1,5 +1,5 @@
 # Licensed under the Apache License, Version 2.0
-"""Live integration test: drive the official openai SDK against our /v1 router.
+"""Live integration test: drive the official openai SDK against our /openai router.
 
 The official ``openai`` SDK sends multipart/form-data to ``POST /audio/transcriptions``.
 This test spins up a real uvicorn server with a FakeSTTEngine and verifies that
@@ -23,11 +23,11 @@ def base_url():
 
 def test_transcriptions_via_openai_sdk(base_url):
     """Official openai SDK transcriptions.create hits our router and returns text."""
-    openai = pytest.importorskip("openai")
+    import openai
 
     client = openai.OpenAI(
         api_key="ignored",
-        base_url=f"{base_url}/v1",
+        base_url=f"{base_url}/openai/v1",
     )
     wav_bytes = make_silent_wav(0.1)
     result = client.audio.transcriptions.create(
@@ -39,11 +39,11 @@ def test_transcriptions_via_openai_sdk(base_url):
 
 def test_transcriptions_verbose_json_via_sdk(base_url):
     """verbose_json response_format returns a TranscriptionVerbose-compatible dict."""
-    openai = pytest.importorskip("openai")
+    import openai
 
     client = openai.OpenAI(
         api_key="ignored",
-        base_url=f"{base_url}/v1",
+        base_url=f"{base_url}/openai/v1",
     )
     wav_bytes = make_silent_wav(0.1)
     result = client.audio.transcriptions.create(
@@ -58,11 +58,11 @@ def test_transcriptions_verbose_json_via_sdk(base_url):
 
 def test_translations_via_openai_sdk(base_url):
     """Official openai SDK translations.create hits our /audio/translations route."""
-    openai = pytest.importorskip("openai")
+    import openai
 
     client = openai.OpenAI(
         api_key="ignored",
-        base_url=f"{base_url}/v1",
+        base_url=f"{base_url}/openai/v1",
     )
     wav_bytes = make_silent_wav(0.1)
     result = client.audio.translations.create(

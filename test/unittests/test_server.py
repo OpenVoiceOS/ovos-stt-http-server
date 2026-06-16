@@ -170,6 +170,37 @@ def test_create_app_lang_detect_multi(load_stt, load_lang):
 
 
 @patch("ovos_stt_http_server.load_stt_plugin")
+def test_create_app_lang_detect_no_valid_langs(load_stt):
+    """/lang_detect without valid_langs must detect, not crash.
+
+    Regression: ``request.query_params.get("valid_langs").split(",")`` raised
+    AttributeError (HTTP 500) when the param was absent.
+    """
+    load_stt.return_value = FakeSTT
+    app, _model = srv.create_app("fake-stt")
+    client = TestClient(app)
+    r = client.post("/lang_detect", content=b"\x00\x00")
+    assert r.status_code == 200
+    assert r.json() == {"lang": "en", "conf": 0.99}
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_create_app_stt_with_sample_params(load_stt):
+    """/stt must accept sample_rate/sample_width query params.
+
+    Regression: query params arrive as strings and were passed straight to
+    ``AudioData(... , sample_rate, sample_width)``, which asserts ints and
+    raised TypeError (HTTP 500).
+    """
+    load_stt.return_value = FakeSTT
+    app, _model = srv.create_app("fake-stt")
+    client = TestClient(app)
+    r = client.post("/stt?lang=en&sample_rate=8000&sample_width=2", content=b"\x00\x00" * 100)
+    assert r.status_code == 200
+    assert r.text == "transcribed:en"
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
 def test_create_app_multi_mode(load_stt):
     load_stt.return_value = FakeSTT
     app, model = srv.create_app("fake-stt", multi=True)

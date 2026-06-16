@@ -24,7 +24,7 @@ def base_url():
 
 def test_vosk_protocol(base_url):
     """Full vosk-server wire sequence: config → audio → eof → final text."""
-    websockets = pytest.importorskip("websockets.sync.client")
+    import websockets.sync.client as websockets
     ws_url = base_url.replace("http://", "ws://") + "/vosk"
     with websockets.connect(ws_url) as ws:
         ws.send(json.dumps({"config": {"sample_rate": 16000}}))

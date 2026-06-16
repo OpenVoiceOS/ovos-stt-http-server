@@ -85,7 +85,7 @@ def _parse_text(raw: str) -> tuple[dict, str]:
 
 
 def test_ws_streaming_protocol(base_url):
-    websockets = pytest.importorskip("websockets.sync.client")
+    import websockets.sync.client as websockets
 
     ws_url = base_url.replace("http://", "ws://") + \
         "/azure-stt/cognitiveservices/v1?language=en-US"

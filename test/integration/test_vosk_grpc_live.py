@@ -18,7 +18,7 @@ def _free_port() -> int:
 @pytest.fixture
 def grpc_server_port():
     """Start an isolated gRPC server on a free port for each test."""
-    grpc = pytest.importorskip("grpc")
+    import grpc
     from ovos_stt_http_server.vosk_grpc_server import start_grpc_server
 
     port = _free_port()
@@ -34,7 +34,7 @@ def grpc_server_port():
 
 
 def test_streaming_recognize(grpc_server_port):
-    grpc = pytest.importorskip("grpc")
+    import grpc
     from ovos_stt_http_server.proto import stt_service_pb2 as pb
     from ovos_stt_http_server.proto import stt_service_pb2_grpc as pb_grpc
 

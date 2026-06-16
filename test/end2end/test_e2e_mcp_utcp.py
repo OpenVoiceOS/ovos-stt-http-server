@@ -176,13 +176,6 @@ class TestUtcpE2E:
 # MCP end-to-end
 # ---------------------------------------------------------------------------
 
-mcp_available = pytest.mark.skipif(
-    not __import__("importlib").util.find_spec("mcp"),
-    reason="mcp package not installed",
-)
-
-
-@mcp_available
 class TestMcpE2E:
     """Drive a real MCP handshake (initialize → list_tools → call_tool) over HTTP.
 

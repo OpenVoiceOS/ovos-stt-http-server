@@ -173,8 +173,8 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
             str: Transcribed text from the provided audio, or an empty string if no transcription is produced.
         """
         lang = str(request.query_params.get("lang", Configuration().get("lang", "auto"))).lower()
-        sr = request.query_params.get("sample_rate", 16000)
-        sw = request.query_params.get("sample_width", 2)
+        sr = int(request.query_params.get("sample_rate", 16000))
+        sw = int(request.query_params.get("sample_width", 2))
         audio_bytes = await request.body()
         audio = AudioData(audio_bytes, sr, sw)
         if lang == "auto":
@@ -183,8 +183,9 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
 
     @app.post("/lang_detect")
     async def get_lang(request: Request):
-        valid = request.query_params.get("valid_langs").split(",")
-        if len(valid) == 1:
+        valid_param = request.query_params.get("valid_langs")
+        valid = valid_param.split(",") if valid_param else None
+        if valid and len(valid) == 1:
             return {"lang": valid[0], "conf": 1.0}
         audio_bytes = await request.body()
         lang, prob = model.detect_language(audio_bytes, valid_langs=valid)
@@ -220,6 +221,10 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     from ovos_stt_http_server.routers.aws_transcribe import make_aws_transcribe_router
     app.include_router(make_aws_transcribe_router(model))
     app.include_router(make_deepgram_router(model))
+    from ovos_stt_http_server.routers.vosk_server import make_vosk_server_router
+    app.include_router(make_vosk_server_router(model))
+    from ovos_stt_http_server.routers.kaldi_gstreamer import make_kaldi_gstreamer_router
+    app.include_router(make_kaldi_gstreamer_router(model))
 
     # Mount MCP server when the optional dependency is available.
     try:

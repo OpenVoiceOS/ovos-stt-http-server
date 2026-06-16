@@ -23,7 +23,7 @@ def base_url():
 
 def test_speech_ws_transcription(base_url):
     """Stream audio + EOS and receive partial + final JSON results."""
-    websockets = pytest.importorskip("websockets")
+    import websockets
     import asyncio
 
     async def _run():
@@ -52,7 +52,7 @@ def test_speech_ws_transcription(base_url):
 
 def test_status_ws(base_url):
     """Status endpoint emits a valid capacity JSON and closes."""
-    websockets = pytest.importorskip("websockets")
+    import websockets
     import asyncio
 
     async def _run():

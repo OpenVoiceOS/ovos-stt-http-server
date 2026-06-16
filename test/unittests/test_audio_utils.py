@@ -56,7 +56,7 @@ def test_non_wav_without_pydub_raises_501(monkeypatch):
 
 def test_non_wav_with_pydub(monkeypatch):
     """Force the pydub branch by passing a wav body with a non-wav extension."""
-    pytest.importorskip("pydub")
+    import pydub
     raw_wav = _make_wav()
     # pydub.AudioSegment.from_file accepts WAV with format="raw" only if PCM-formatted.
     # Use format="wav" — but feed via extension different from "wav" to trigger pydub branch.
