@@ -227,6 +227,8 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     app.include_router(make_kaldi_gstreamer_router(model))
     from ovos_stt_http_server.routers.elevenlabs_scribe import make_elevenlabs_scribe_router
     app.include_router(make_elevenlabs_scribe_router(model))
+    from ovos_stt_http_server.routers.groq import make_groq_router
+    app.include_router(make_groq_router(model))
 
     # Mount MCP server when the optional dependency is available.
     try:
