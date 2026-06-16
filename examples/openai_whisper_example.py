@@ -16,7 +16,7 @@ OVOS_HOST = "http://localhost:8080"
 
 
 def main(audio_path: str) -> None:
-    client = OpenAI(base_url=f"{OVOS_HOST}/openai/v1", api_key="ignored")
+    client = OpenAI(base_url=f"{OVOS_HOST}/v1", api_key="ignored")
     with open(audio_path, "rb") as fp:
         response = client.audio.transcriptions.create(
             model="whisper-1",
