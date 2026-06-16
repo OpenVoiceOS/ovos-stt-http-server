@@ -4,11 +4,15 @@
 Emulates the HTTP API of the official ``whisper.cpp`` server binary
 (https://github.com/ggerganov/whisper.cpp/tree/master/examples/server).
 
-Two endpoints are exposed, exactly matching the upstream server paths:
+The router is mounted under the ``/whisper-cpp`` prefix so it owns a unique
+URL namespace like every other vendor router — in particular this keeps its
+OpenAI-compatible alias from colliding with the dedicated OpenAI Whisper
+router (which owns ``/v1``). Relative to that prefix it exposes the two
+upstream whisper.cpp server paths:
 
-* ``POST /inference`` — native whisper.cpp multipart endpoint.
-* ``POST /v1/audio/transcriptions`` — OpenAI-compatible endpoint;
-  semantically identical to ``/inference``.
+* ``POST /whisper-cpp/inference`` — native whisper.cpp multipart endpoint.
+* ``POST /whisper-cpp/v1/audio/transcriptions`` — OpenAI-compatible endpoint;
+  semantically identical to ``/whisper-cpp/inference``.
 
 Both accept ``multipart/form-data`` with at minimum a ``file`` field.
 Extra form fields (``temperature``, ``response_format``, ``language``,
@@ -48,12 +52,12 @@ class WhisperCppResponse(BaseModel):
 def make_whisper_cpp_server_router(model) -> APIRouter:
     """Create an ``APIRouter`` that emulates the whisper.cpp HTTP server API.
 
-    The router exposes two endpoints at the exact paths used by the upstream
-    ``whisper.cpp`` server so that any client already pointed at a real
-    whisper.cpp server works against this router without modification:
+    The router uses the upstream ``whisper.cpp`` server's own paths under the
+    ``/whisper-cpp`` prefix, so a client pointed at a real whisper.cpp server
+    works against this router by changing only its base URL to ``…/whisper-cpp``:
 
-    * ``POST /inference`` — native multipart inference endpoint.
-    * ``POST /v1/audio/transcriptions`` — OpenAI-compatible alias.
+    * ``POST /whisper-cpp/inference`` — native multipart inference endpoint.
+    * ``POST /whisper-cpp/v1/audio/transcriptions`` — OpenAI-compatible alias.
 
     Args:
         model: Any object that exposes
@@ -64,7 +68,7 @@ def make_whisper_cpp_server_router(model) -> APIRouter:
         Configured ``APIRouter`` ready to pass to
         ``app.include_router(...)``.
     """
-    router = APIRouter(tags=["whisper-cpp-server"])
+    router = APIRouter(prefix="/whisper-cpp", tags=["whisper-cpp-server"])
 
     async def _transcribe(
         file: UploadFile,

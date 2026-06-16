@@ -76,22 +76,22 @@ def wav() -> bytes:
 
 
 # ---------------------------------------------------------------------------
-# /inference tests
+# /whisper-cpp/inference tests
 # ---------------------------------------------------------------------------
 
 class TestInferenceEndpoint:
-    """Tests for the native whisper.cpp ``POST /inference`` endpoint."""
+    """Tests for the native whisper.cpp ``POST /whisper-cpp/inference`` endpoint."""
 
     def test_returns_transcript_json(self, client, wav):
         """Happy path: WAV upload returns JSON with transcribed text."""
-        r = client.post("/inference", files={"file": ("audio.wav", wav, "audio/wav")})
+        r = client.post("/whisper-cpp/inference", files={"file": ("audio.wav", wav, "audio/wav")})
         assert r.status_code == 200
         assert r.json() == {"text": "hello world"}
 
     def test_response_format_json_explicit(self, client, wav):
         """Explicit response_format=json returns the same JSON body."""
         r = client.post(
-            "/inference",
+            "/whisper-cpp/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
             data={"response_format": "json"},
         )
@@ -101,7 +101,7 @@ class TestInferenceEndpoint:
     def test_response_format_text(self, client, wav):
         """response_format=text returns plain text transcript."""
         r = client.post(
-            "/inference",
+            "/whisper-cpp/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
             data={"response_format": "text"},
         )
@@ -111,7 +111,7 @@ class TestInferenceEndpoint:
     def test_language_param_accepted(self, client, wav):
         """language= form field is accepted without error."""
         r = client.post(
-            "/inference",
+            "/whisper-cpp/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
             data={"language": "de"},
         )
@@ -121,7 +121,7 @@ class TestInferenceEndpoint:
     def test_temperature_param_accepted(self, client, wav):
         """temperature= form field is accepted and silently ignored."""
         r = client.post(
-            "/inference",
+            "/whisper-cpp/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
             data={"temperature": "0.2"},
         )
@@ -130,7 +130,7 @@ class TestInferenceEndpoint:
     def test_prompt_param_accepted(self, client, wav):
         """prompt= form field is accepted and silently ignored."""
         r = client.post(
-            "/inference",
+            "/whisper-cpp/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
             data={"prompt": "some hint"},
         )
@@ -139,7 +139,7 @@ class TestInferenceEndpoint:
     def test_translate_param_accepted(self, client, wav):
         """translate= form field is accepted and silently ignored."""
         r = client.post(
-            "/inference",
+            "/whisper-cpp/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
             data={"translate": "false"},
         )
@@ -148,7 +148,7 @@ class TestInferenceEndpoint:
     def test_empty_transcript_returns_empty_text(self, empty_client, wav):
         """Empty model transcript surfaces as empty 'text' field."""
         r = empty_client.post(
-            "/inference",
+            "/whisper-cpp/inference",
             files={"file": ("audio.wav", wav, "audio/wav")},
         )
         assert r.status_code == 200
@@ -156,21 +156,21 @@ class TestInferenceEndpoint:
 
     def test_missing_file_returns_422(self, client):
         """No file field → FastAPI validation error 422."""
-        r = client.post("/inference", data={"language": "en"})
+        r = client.post("/whisper-cpp/inference", data={"language": "en"})
         assert r.status_code == 422
 
 
 # ---------------------------------------------------------------------------
-# /v1/audio/transcriptions tests
+# /whisper-cpp/v1/audio/transcriptions tests
 # ---------------------------------------------------------------------------
 
 class TestOpenAITranscriptionsEndpoint:
-    """Tests for the OpenAI-compatible ``POST /v1/audio/transcriptions``."""
+    """Tests for the OpenAI-compatible ``POST /whisper-cpp/v1/audio/transcriptions``."""
 
     def test_returns_transcript_json(self, client, wav):
         """Happy path: WAV upload returns JSON with transcribed text."""
         r = client.post(
-            "/v1/audio/transcriptions",
+            "/whisper-cpp/v1/audio/transcriptions",
             files={"file": ("audio.wav", wav, "audio/wav")},
         )
         assert r.status_code == 200
@@ -179,7 +179,7 @@ class TestOpenAITranscriptionsEndpoint:
     def test_model_field_accepted(self, client, wav):
         """model= form field (OpenAI convention) is accepted without error."""
         r = client.post(
-            "/v1/audio/transcriptions",
+            "/whisper-cpp/v1/audio/transcriptions",
             files={"file": ("audio.wav", wav, "audio/wav")},
             data={"model": "whisper-1"},
         )
@@ -189,7 +189,7 @@ class TestOpenAITranscriptionsEndpoint:
     def test_language_param_accepted(self, client, wav):
         """language= form field is accepted without error."""
         r = client.post(
-            "/v1/audio/transcriptions",
+            "/whisper-cpp/v1/audio/transcriptions",
             files={"file": ("audio.wav", wav, "audio/wav")},
             data={"language": "fr"},
         )
@@ -198,7 +198,7 @@ class TestOpenAITranscriptionsEndpoint:
     def test_response_format_text(self, client, wav):
         """response_format=text returns plain text."""
         r = client.post(
-            "/v1/audio/transcriptions",
+            "/whisper-cpp/v1/audio/transcriptions",
             files={"file": ("audio.wav", wav, "audio/wav")},
             data={"response_format": "text"},
         )
@@ -208,7 +208,7 @@ class TestOpenAITranscriptionsEndpoint:
     def test_empty_transcript(self, empty_client, wav):
         """Empty model transcript returns empty text field."""
         r = empty_client.post(
-            "/v1/audio/transcriptions",
+            "/whisper-cpp/v1/audio/transcriptions",
             files={"file": ("audio.wav", wav, "audio/wav")},
         )
         assert r.status_code == 200
@@ -216,13 +216,13 @@ class TestOpenAITranscriptionsEndpoint:
 
     def test_missing_file_returns_422(self, client):
         """No file field → FastAPI validation error 422."""
-        r = client.post("/v1/audio/transcriptions", data={"model": "whisper-1"})
+        r = client.post("/whisper-cpp/v1/audio/transcriptions", data={"model": "whisper-1"})
         assert r.status_code == 422
 
     def test_temperature_and_prompt_accepted(self, client, wav):
         """temperature= and prompt= are accepted and silently ignored."""
         r = client.post(
-            "/v1/audio/transcriptions",
+            "/whisper-cpp/v1/audio/transcriptions",
             files={"file": ("audio.wav", wav, "audio/wav")},
             data={"temperature": "0.0", "prompt": "hint"},
         )

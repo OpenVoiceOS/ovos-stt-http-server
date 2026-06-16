@@ -1,9 +1,9 @@
 # Licensed under the Apache License, Version 2.0
 """OpenAI Whisper-compatible STT endpoints.
 
-Implements ``POST /v1/audio/transcriptions`` (and ``/v1/audio/translations``)
-using the multipart/form-data wire format sent by the official ``openai``
-Python SDK (``openai>=1.0``).
+Implements ``POST /openai/v1/audio/transcriptions`` (and
+``/openai/v1/audio/translations``) using the multipart/form-data wire format
+sent by the official ``openai`` Python SDK (``openai>=1.0``).
 
 Usage::
 
@@ -13,7 +13,7 @@ Usage::
 Then point the SDK at the server::
 
     from openai import OpenAI
-    client = OpenAI(api_key="ignored", base_url="http://localhost:8080/v1")
+    client = OpenAI(api_key="ignored", base_url="http://localhost:8080/openai/v1")
     result = client.audio.transcriptions.create(file=audio_bytes, model="whisper-1")
 """
 import io
@@ -103,8 +103,8 @@ def make_openai_whisper_router(model, translator=None) -> APIRouter:
     """Create an OpenAI Whisper-compatible router and attach it to *model*.
 
     The router exposes:
-    - ``POST /v1/audio/transcriptions`` — transcribe audio to text.
-    - ``POST /v1/audio/translations`` — transcribe, then translate to English.
+    - ``POST /openai/v1/audio/transcriptions`` — transcribe audio to text.
+    - ``POST /openai/v1/audio/translations`` — transcribe, then translate to English.
 
     Both endpoints accept ``multipart/form-data`` with at least ``file`` and
     ``model`` fields, exactly as sent by the official ``openai`` Python SDK.
@@ -119,9 +119,9 @@ def make_openai_whisper_router(model, translator=None) -> APIRouter:
             ``None``, the transcript is returned untranslated.
 
     Returns:
-        Configured :class:`~fastapi.APIRouter` prefixed with ``/v1``.
+        Configured :class:`~fastapi.APIRouter` prefixed with ``/openai``.
     """
-    router = APIRouter(prefix="/v1", tags=["openai-whisper"])
+    router = APIRouter(prefix="/openai", tags=["openai-whisper"])
 
     async def _transcribe(
         file: UploadFile,
@@ -211,7 +211,7 @@ def make_openai_whisper_router(model, translator=None) -> APIRouter:
         )
 
     @router.post(
-        "/audio/transcriptions",
+        "/v1/audio/transcriptions",
         summary="Transcribe audio (OpenAI Whisper-compatible)",
     )
     async def transcriptions(
@@ -249,7 +249,7 @@ def make_openai_whisper_router(model, translator=None) -> APIRouter:
         return await _transcribe(file, language, response_format or "json", temperature or 0.0)
 
     @router.post(
-        "/audio/translations",
+        "/v1/audio/translations",
         summary="Translate audio to English (OpenAI Whisper-compatible)",
     )
     async def translations(

@@ -53,12 +53,12 @@ def client() -> TestClient:
 # ---------------------------------------------------------------------------
 
 class TestTranscriptions:
-    """Tests for POST /v1/audio/transcriptions."""
+    """Tests for POST /openai/v1/audio/transcriptions."""
 
     def test_json_response_default(self, client):
         """Default response_format=json returns {text: ...}."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1"},
         )
@@ -69,7 +69,7 @@ class TestTranscriptions:
     def test_json_response_explicit(self, client):
         """Explicit response_format=json returns {text: ...}."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1", "response_format": "json"},
         )
@@ -79,7 +79,7 @@ class TestTranscriptions:
     def test_text_response_format(self, client):
         """response_format=text returns plain text."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1", "response_format": "text"},
         )
@@ -89,7 +89,7 @@ class TestTranscriptions:
     def test_verbose_json_response_format(self, client):
         """response_format=verbose_json includes duration, language, segments."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1", "response_format": "verbose_json"},
         )
@@ -104,7 +104,7 @@ class TestTranscriptions:
     def test_srt_response_format(self, client):
         """response_format=srt returns SRT-formatted plain text."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1", "response_format": "srt"},
         )
@@ -115,7 +115,7 @@ class TestTranscriptions:
     def test_vtt_response_format(self, client):
         """response_format=vtt returns WebVTT-formatted plain text."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1", "response_format": "vtt"},
         )
@@ -126,7 +126,7 @@ class TestTranscriptions:
     def test_with_language_param(self, client):
         """language param is forwarded to the model."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1", "language": "pt"},
         )
@@ -136,7 +136,7 @@ class TestTranscriptions:
     def test_with_temperature_and_prompt(self, client):
         """temperature and prompt are accepted without error."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={
                 "model": "whisper-1",
@@ -149,7 +149,7 @@ class TestTranscriptions:
     def test_empty_file_returns_400(self, client):
         """Empty file body returns HTTP 400."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", b"", "audio/wav")},
             data={"model": "whisper-1"},
         )
@@ -158,7 +158,7 @@ class TestTranscriptions:
     def test_missing_model_field_returns_422(self, client):
         """Missing required model field returns HTTP 422."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={},
         )
@@ -167,7 +167,7 @@ class TestTranscriptions:
     def test_unknown_response_format_returns_422(self, client):
         """Unknown response_format returns HTTP 422."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1", "response_format": "xml"},
         )
@@ -176,7 +176,7 @@ class TestTranscriptions:
     def test_raw_bytes_fallback(self, client):
         """Non-WAV bytes (raw PCM) are accepted via fallback path."""
         resp = client.post(
-            "/v1/audio/transcriptions",
+            "/openai/v1/audio/transcriptions",
             files={"file": ("audio.raw", b"\x00\x00" * 160, "application/octet-stream")},
             data={"model": "whisper-1"},
         )
@@ -189,12 +189,12 @@ class TestTranscriptions:
 # ---------------------------------------------------------------------------
 
 class TestTranslations:
-    """Tests for POST /v1/audio/translations."""
+    """Tests for POST /openai/v1/audio/translations."""
 
     def test_json_response(self, client):
         """translations endpoint returns {text: ...} with json format."""
         resp = client.post(
-            "/v1/audio/translations",
+            "/openai/v1/audio/translations",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1"},
         )
@@ -204,7 +204,7 @@ class TestTranslations:
     def test_text_response_format(self, client):
         """translations endpoint supports response_format=text."""
         resp = client.post(
-            "/v1/audio/translations",
+            "/openai/v1/audio/translations",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1", "response_format": "text"},
         )
@@ -214,7 +214,7 @@ class TestTranslations:
     def test_verbose_json_response_format(self, client):
         """translations endpoint supports verbose_json."""
         resp = client.post(
-            "/v1/audio/translations",
+            "/openai/v1/audio/translations",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={"model": "whisper-1", "response_format": "verbose_json"},
         )
@@ -226,7 +226,7 @@ class TestTranslations:
     def test_empty_file_returns_400(self, client):
         """translations endpoint rejects empty files."""
         resp = client.post(
-            "/v1/audio/translations",
+            "/openai/v1/audio/translations",
             files={"file": ("audio.wav", b"", "audio/wav")},
             data={"model": "whisper-1"},
         )
@@ -235,7 +235,7 @@ class TestTranslations:
     def test_missing_model_returns_422(self, client):
         """Missing model field returns 422."""
         resp = client.post(
-            "/v1/audio/translations",
+            "/openai/v1/audio/translations",
             files={"file": ("audio.wav", _wav_bytes(), "audio/wav")},
             data={},
         )
@@ -262,7 +262,7 @@ def test_translations_runs_through_translator():
     import io
     c = _client_with_translator()
     resp = c.post(
-        "/v1/audio/translations",
+        "/openai/v1/audio/translations",
         files={"file": ("a.wav", io.BytesIO(b"RIFFxxxx"), "audio/wav")},
         data={"model": "whisper-1"},
     )
@@ -280,7 +280,7 @@ def test_translations_without_translator_returns_transcript():
     app.include_router(make_openai_whisper_router(FakeModel()))  # translator=None
     c = TestClient(app)
     resp = c.post(
-        "/v1/audio/translations",
+        "/openai/v1/audio/translations",
         files={"file": ("a.wav", io.BytesIO(b"RIFFxxxx"), "audio/wav")},
         data={"model": "whisper-1"},
     )

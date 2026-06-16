@@ -34,44 +34,44 @@ def _post_wav(url: str, **form_data) -> requests.Response:
 
 
 class TestInferenceLive:
-    """Live HTTP tests for ``POST /inference``."""
+    """Live HTTP tests for ``POST /whisper-cpp/inference``."""
 
     def test_basic_transcription(self, base_url):
         """Basic WAV upload returns 'hello world' transcript."""
-        r = _post_wav(f"{base_url}/inference")
+        r = _post_wav(f"{base_url}/whisper-cpp/inference")
         r.raise_for_status()
         assert r.json() == {"text": "hello world"}
 
     def test_language_param(self, base_url):
         """language= form field is forwarded without error."""
-        r = _post_wav(f"{base_url}/inference", language="de")
+        r = _post_wav(f"{base_url}/whisper-cpp/inference", language="de")
         r.raise_for_status()
         assert r.json()["text"] == "hello world"
 
     def test_response_format_text(self, base_url):
         """response_format=text returns plain transcript."""
-        r = _post_wav(f"{base_url}/inference", response_format="text")
+        r = _post_wav(f"{base_url}/whisper-cpp/inference", response_format="text")
         r.raise_for_status()
         assert r.text == "hello world"
 
 
 class TestOpenAITranscriptionsLive:
-    """Live HTTP tests for ``POST /v1/audio/transcriptions``."""
+    """Live HTTP tests for ``POST /whisper-cpp/v1/audio/transcriptions``."""
 
     def test_basic_transcription(self, base_url):
         """Basic WAV upload returns 'hello world' transcript."""
-        r = _post_wav(f"{base_url}/v1/audio/transcriptions")
+        r = _post_wav(f"{base_url}/whisper-cpp/v1/audio/transcriptions")
         r.raise_for_status()
         assert r.json() == {"text": "hello world"}
 
     def test_model_field(self, base_url):
         """model= form field (OpenAI convention) is accepted."""
-        r = _post_wav(f"{base_url}/v1/audio/transcriptions", model="whisper-1")
+        r = _post_wav(f"{base_url}/whisper-cpp/v1/audio/transcriptions", model="whisper-1")
         r.raise_for_status()
         assert r.json()["text"] == "hello world"
 
     def test_response_format_text(self, base_url):
         """response_format=text returns plain transcript."""
-        r = _post_wav(f"{base_url}/v1/audio/transcriptions", response_format="text")
+        r = _post_wav(f"{base_url}/whisper-cpp/v1/audio/transcriptions", response_format="text")
         r.raise_for_status()
         assert r.text == "hello world"
