@@ -21,7 +21,7 @@ OVOS_HOST = "http://localhost:8080"
 def main(audio_path: str) -> None:
     with open(audio_path, "rb") as fp:
         r = requests.post(
-            f"{OVOS_HOST}/whisper-cpp/inference",
+            f"{OVOS_HOST}/inference",
             files={"file": (audio_path, fp, "audio/wav")},
             data={"language": "en", "response_format": "json"},
         )

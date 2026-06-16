@@ -5,8 +5,8 @@ A lightweight FastAPI server that exposes any OVOS STT plugin as an HTTP service
 ## Architecture
 
 - **Framework**: FastAPI with Uvicorn ASGI server.
-- **Plugin loading**: `ovos-plugin-manager` discovers and loads STT plugins by name — `ModelContainer` (`__init__.py:30`) for single-language mode, `MultiModelContainer` (`__init__.py:57`) for per-language model loading.
-- **CORS**: Unconditional `allow_origins=["*"]` — `create_app` (`__init__.py:109`).
+- **Plugin loading**: `ovos-plugin-manager` discovers and loads STT plugins by name — `ModelContainer` for single-language mode, `MultiModelContainer` for per-language model loading (both in `ovos_stt_http_server/__init__.py`).
+- **CORS**: Unconditional `allow_origins=["*"]` — `create_app()` in `ovos_stt_http_server/__init__.py`.
 
 ## Endpoints
 
@@ -33,4 +33,11 @@ ovos-stt-server --engine ovos-stt-plugin-whisper --lang-engine ovos-audio-transf
 
 ## Audio Format
 
-Input audio must be raw PCM: 16 kHz, mono, 16-bit signed integer (int16). Send bytes directly as the POST body.
+Input audio must be raw PCM: 16 kHz, mono, 16-bit signed integer (int16). Send bytes directly as the POST body. The vendor-compat routers additionally accept their vendors' own audio encodings — see [audio-formats.md](audio-formats.md).
+
+## See also
+
+- [api-compatibility.md](api-compatibility.md) — vendor-compatible STT endpoints (OpenAI, Deepgram, Google, AssemblyAI, …)
+- [audio-formats.md](audio-formats.md) — accepted audio encodings and conversion
+- [wyoming-integration.md](wyoming-integration.md) — Home Assistant Voice / Wyoming bridge
+- [voice-pihole.md](voice-pihole.md) — DNS-redirect + reverse-proxy recipes
