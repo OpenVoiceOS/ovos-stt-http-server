@@ -11,6 +11,7 @@
 
 **Merged pull requests:**
 
+- fix: give the OpenAI and whisper.cpp routers dedicated vendor prefixes [\#86](https://github.com/OpenVoiceOS/ovos-stt-server/pull/86) ([JarbasAl](https://github.com/JarbasAl))
 - docs: modernize README, docs/, and examples [\#85](https://github.com/OpenVoiceOS/ovos-stt-server/pull/85) ([JarbasAl](https://github.com/JarbasAl))
 - docs: add NGI0 Commons Fund attribution [\#84](https://github.com/OpenVoiceOS/ovos-stt-server/pull/84) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): vosk-server WebRTC variant \(/vosk-webrtc/offer\) [\#81](https://github.com/OpenVoiceOS/ovos-stt-server/pull/81) ([JarbasAl](https://github.com/JarbasAl))
