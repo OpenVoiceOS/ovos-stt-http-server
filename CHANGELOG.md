@@ -12,6 +12,7 @@
 **Merged pull requests:**
 
 - feat\(compat\): add ElevenLabs Scribe-compatible STT endpoint [\#90](https://github.com/OpenVoiceOS/ovos-stt-server/pull/90) ([JarbasAl](https://github.com/JarbasAl))
+- feat\(compat\): add Gladia-compatible STT endpoint [\#89](https://github.com/OpenVoiceOS/ovos-stt-server/pull/89) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): add Groq-compatible STT endpoint [\#88](https://github.com/OpenVoiceOS/ovos-stt-server/pull/88) ([JarbasAl](https://github.com/JarbasAl))
 - fix: router bugs, mount missing routers, and require all SDKs for e2e [\#87](https://github.com/OpenVoiceOS/ovos-stt-server/pull/87) ([JarbasAl](https://github.com/JarbasAl))
 - fix: give the OpenAI and whisper.cpp routers dedicated vendor prefixes [\#86](https://github.com/OpenVoiceOS/ovos-stt-server/pull/86) ([JarbasAl](https://github.com/JarbasAl))
