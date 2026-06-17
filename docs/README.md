@@ -30,6 +30,7 @@ is in [`../examples/`](../examples/); full reference in
 | Deepgram | `/deepgram/v1/listen` (HTTP + WS) |
 | Google Cloud STT | `/google/v1/speech:recognize` |
 | AssemblyAI | `/assemblyai/v2/{upload,transcript,realtime/ws}` |
+| Gladia | `/gladia/v2/{upload,transcription,transcription/{id}}` |
 | Speechmatics | `/speechmatics/...` (REST + WS) |
 | Microsoft Azure Speech | `/azure-stt/cognitiveservices/v1` (REST + WS) |
 | AWS Transcribe | `/aws/transcribe` (batch + streaming WS) |
