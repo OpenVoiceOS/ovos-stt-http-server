@@ -28,6 +28,7 @@ client script for each is in [`../examples/`](../examples/).
 | Vendor | Method | Path | Client / example |
 | :--- | :--- | :--- | :--- |
 | OpenAI Whisper | POST | `/v1/audio/transcriptions`, `/v1/audio/translations` | official `openai` — [`openai_whisper_example.py`](../examples/openai_whisper_example.py) |
+| Groq | POST | `/groq/openai/v1/audio/transcriptions` | official `groq` — [`groq_example.py`](../examples/groq_example.py) — OpenAI-compatible, returns an extra `x_groq` block |
 | Deepgram | POST / WS | `/deepgram/v1/listen` | official `deepgram-sdk` — [`deepgram_example.py`](../examples/deepgram_example.py) |
 | Google Cloud STT | POST | `/google/v1/speech:recognize` | HTTP — [`../examples/`](../examples/) |
 | AssemblyAI | POST / GET / WS | `/assemblyai/v2/upload`, `/assemblyai/v2/transcript`, realtime WS | official `assemblyai` — [`assemblyai_example.py`](../examples/assemblyai_example.py) |
@@ -36,6 +37,7 @@ client script for each is in [`../examples/`](../examples/).
 | Microsoft Azure Speech | POST / WS | `/azure-stt/cognitiveservices/v1` | HTTP — [`azure_stt_example.py`](../examples/azure_stt_example.py) |
 | AWS Transcribe | POST / WS | `/aws/transcribe` (batch) + streaming WS | official `boto3` — [`aws_transcribe_example.py`](../examples/aws_transcribe_example.py) |
 | IBM Watson STT | POST / WS | `/watson/speech-to-text/v1/recognize` | official `ibm-watson` — [`ibm_watson_example.py`](../examples/ibm_watson_example.py) |
+| ElevenLabs Scribe | POST | `/elevenlabs/v1/speech-to-text` | official `elevenlabs` — [`elevenlabs_scribe_example.py`](../examples/elevenlabs_scribe_example.py) |
 | Wit.ai | POST | `/wit/speech` | official `wit` — [`wit_ai_example.py`](../examples/wit_ai_example.py) |
 | Chromium Web Speech | POST | `/speech-api/v2/recognize` | `ovos-stt-plugin-chromium` — [`chromium_example.py`](../examples/chromium_example.py) — [details below](#chromium--chrome-web-speech-api-speech-apiv2) |
 
