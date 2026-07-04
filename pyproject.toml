@@ -44,14 +44,14 @@ test = [
     # self-hosted / streaming protocol clients
     "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt",
     # MCP server, exercised by the MCP/UTCP tests
-    "mcp>=1.0.0",
+    "mcp>=1.0.0,<2.0.0",
 ]
 # vosk-webrtc needs aiortc, which builds against system ffmpeg-7 dev headers and
 # has no wheels for the newest Python in the CI matrix. It is therefore kept out
 # of the required `test` extra; its e2e test skips when aiortc is absent (the
 # webrtc router is itself an optional, ImportError-gated feature of the server).
 test-webrtc = ["aiortc"]
-mcp = ["mcp>=1.0.0"]
+mcp = ["mcp>=1.0.0,<2.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/OpenVoiceOS/ovos-stt-http-server"
