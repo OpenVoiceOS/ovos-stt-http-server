@@ -18,6 +18,7 @@
 - fix: give the OpenAI and whisper.cpp routers dedicated vendor prefixes [\#86](https://github.com/OpenVoiceOS/ovos-stt-server/pull/86) ([JarbasAl](https://github.com/JarbasAl))
 - docs: modernize README, docs/, and examples [\#85](https://github.com/OpenVoiceOS/ovos-stt-server/pull/85) ([JarbasAl](https://github.com/JarbasAl))
 - docs: add NGI0 Commons Fund attribution [\#84](https://github.com/OpenVoiceOS/ovos-stt-server/pull/84) ([JarbasAl](https://github.com/JarbasAl))
+- test: run official-SDK e2e tests in CI \(install vendor SDKs\) [\#82](https://github.com/OpenVoiceOS/ovos-stt-server/pull/82) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): vosk-server WebRTC variant \(/vosk-webrtc/offer\) [\#81](https://github.com/OpenVoiceOS/ovos-stt-server/pull/81) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(openai-whisper\): translate to English via OVOS translate plugin [\#80](https://github.com/OpenVoiceOS/ovos-stt-server/pull/80) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): vosk-server MQTT variant [\#79](https://github.com/OpenVoiceOS/ovos-stt-server/pull/79) ([JarbasAl](https://github.com/JarbasAl))
