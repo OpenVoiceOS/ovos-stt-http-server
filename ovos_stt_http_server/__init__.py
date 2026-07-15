@@ -17,6 +17,8 @@ from fastapi.responses import PlainTextResponse
 from ovos_config import Configuration
 from ovos_plugin_manager.audio_transformers import load_audio_transformer_plugin, AudioLanguageDetector
 from ovos_plugin_manager.stt import load_stt_plugin
+from ovos_plugin_manager.transformer_services import (AudioTransformersService,
+                                                      UtteranceTransformersService)
 from ovos_plugin_manager.utils.audio import AudioFile, AudioData
 from ovos_utils.log import LOG
 from starlette.requests import Request
@@ -39,8 +41,45 @@ def _load_translator():
         return None
 
 
-class ModelContainer:
+class TransformerPipelines:
+    """Transformer pipelines shared by the model containers.
+
+    Loading is config-gated and opt-in via the mycroft.conf
+    ``audio_transformers`` / ``utterance_transformers`` sections; with no
+    config both chains are empty and audio/transcripts pass through
+    untouched.
+    """
+
+    def init_transformers(self):
+        self.audio_transformers = AudioTransformersService(
+            config=Configuration().get("audio_transformers") or {})
+        self.utterance_transformers = UtteranceTransformersService(
+            config=Configuration().get("utterance_transformers") or {})
+
+    def transform_audio(self, audio: AudioData) -> Tuple[AudioData, dict]:
+        """Run the audio transformer chain before the STT stage.
+
+        Returns the (possibly modified) audio and the chain's context —
+        e.g. ``stt_lang`` when an AudioLanguageDetector is in the chain.
+        """
+        if not self.audio_transformers.plugins:
+            return audio, {}
+        chunk, context = self.audio_transformers.transform(audio.frame_data)
+        audio = AudioData(chunk, audio.sample_rate, audio.sample_width)
+        return audio, context
+
+    def transform_utterance(self, utterance: str, lang: str) -> str:
+        """Run the utterance transformer chain on a transcript."""
+        if not utterance or not self.utterance_transformers.plugins:
+            return utterance
+        utterances, _ = self.utterance_transformers.transform(
+            [utterance], {"lang": lang})
+        return utterances[0] if utterances else utterance
+
+
+class ModelContainer(TransformerPipelines):
     def __init__(self, plugin: str, lang_plugin: str = None, config: dict = None):
+        self.init_transformers()
         plugin = load_stt_plugin(plugin)
         self.lang_plugin = None
         if not plugin:
@@ -63,13 +102,19 @@ class ModelContainer:
         return self.lang_plugin.detect(audio, valid_langs)
 
     def process_audio(self, audio: AudioData, lang: str = "auto"):
-        return self.engine.execute(audio, language=lang) or ""
+        audio, context = self.transform_audio(audio)
+        if lang == "auto" and context.get("stt_lang"):
+            lang = context["stt_lang"]
+        utterance = self.engine.execute(audio, language=lang) or ""
+        return self.transform_utterance(utterance, lang)
 
 
-class MultiModelContainer:
+class MultiModelContainer(TransformerPipelines):
     """ loads 1 model per language """
 
     def __init__(self, plugin: str, lang_plugin: str = None, config: dict = None):
+        # transformer chains are shared across the per-language engines
+        self.init_transformers()
         self.plugin_class = load_stt_plugin(plugin)
         self.lang_plugin = None
         if not self.plugin_class:
@@ -114,8 +159,12 @@ class MultiModelContainer:
         Returns:
             str: Transcribed text for the audio, or an empty string if no transcription is produced.
         """
+        audio, context = self.transform_audio(audio)
+        if lang == "auto" and context.get("stt_lang"):
+            lang = context["stt_lang"]
         engine = self.get_engine(lang)
-        return engine.execute(audio, language=lang) or ""
+        utterance = engine.execute(audio, language=lang) or ""
+        return self.transform_utterance(utterance, lang)
 
 
 def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):

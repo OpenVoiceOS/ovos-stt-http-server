@@ -216,3 +216,83 @@ def test_start_stt_server_returns_app(load_stt):
     app, model = srv.start_stt_server("fake-stt")
     assert app is not None
     assert model is not None
+
+
+# ---------- Transformer pipelines ----------
+
+class FakeUtteranceService:
+    plugins = ["fake"]
+
+    def transform(self, utterances, context=None):
+        return [f"corrected:{u}" for u in utterances], {"touched": True}
+
+
+class FakeAudioService:
+    plugins = ["fake"]
+
+    def transform(self, chunk, context=None):
+        return chunk[::-1], {"stt_lang": "de"}
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_transformers_off_by_default(load_stt):
+    """With no transformer config the transcript passes through untouched."""
+    load_stt.return_value = FakeSTT
+    mc = srv.ModelContainer("fake")
+    assert mc.audio_transformers.plugins == []
+    assert mc.utterance_transformers.plugins == []
+    assert mc.process_audio(b"x", "en") == "transcribed:en"
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_utterance_transformers_rewrite_transcript(load_stt):
+    load_stt.return_value = FakeSTT
+    mc = srv.ModelContainer("fake")
+    mc.utterance_transformers = FakeUtteranceService()
+    assert mc.process_audio(b"x", "en") == "corrected:transcribed:en"
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_audio_transformers_run_before_stt_and_set_lang(load_stt):
+    seen = {}
+
+    class RecordingSTT(FakeSTT):
+        def execute(self, audio, language=None):
+            seen["audio"] = audio
+            seen["language"] = language
+            return "ok"
+
+    load_stt.return_value = RecordingSTT
+    mc = srv.ModelContainer("fake")
+    mc.audio_transformers = FakeAudioService()
+    audio = srv.AudioData(b"abc", 16000, 2)
+    out = mc.process_audio(audio, "auto")
+    assert out == "ok"
+    # chain modified the audio and its stt_lang resolved the "auto" lang
+    assert seen["audio"].frame_data == b"cba"
+    assert seen["language"] == "de"
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_explicit_lang_wins_over_detected(load_stt):
+    seen = {}
+
+    class RecordingSTT(FakeSTT):
+        def execute(self, audio, language=None):
+            seen["language"] = language
+            return "ok"
+
+    load_stt.return_value = RecordingSTT
+    mc = srv.ModelContainer("fake")
+    mc.audio_transformers = FakeAudioService()
+    mc.process_audio(srv.AudioData(b"abc", 16000, 2), "pt")
+    assert seen["language"] == "pt"
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_multi_model_container_shares_transformers(load_stt):
+    load_stt.return_value = FakeSTT
+    mm = srv.MultiModelContainer("fake")
+    mm.utterance_transformers = FakeUtteranceService()
+    assert mm.process_audio(b"x", "en") == "corrected:transcribed:en"
+    assert mm.process_audio(b"x", "de") == "corrected:transcribed:de"
