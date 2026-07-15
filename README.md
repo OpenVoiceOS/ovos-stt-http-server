@@ -110,6 +110,28 @@ See [`examples/native_example.py`](examples/native_example.py) for a runnable
 script that reads a WAV file and posts its PCM frames. Full reference:
 [docs/index.md](docs/index.md).
 
+### Transformer pipelines
+
+The server can run OVOS transformer plugins around transcription, on every
+endpoint: **audio transformers** process audio before STT (an
+`AudioLanguageDetector` in the chain resolves `lang=auto`) and **utterance
+transformers** rewrite the transcript before it is returned. Opt-in via the
+standard mycroft.conf sections:
+
+```json
+{
+  "utterance_transformers": {
+    "ovos-utterance-corrections-plugin": {}
+  }
+}
+```
+
+Enabling an utterance transformer server-side means clients receive a
+**different transcript than the raw STT output** — that's the tool for
+fleet-wide vocabulary corrections. See
+[docs/transformers.md](docs/transformers.md) for when to run transformers
+server-side vs on-device and how to avoid double-processing.
+
 ## AI Agent Integration
 
 ### MCP — Model Context Protocol
@@ -273,6 +295,7 @@ Each plugin can ship its own Dockerfile in its repository using
 | [docs/index.md](docs/index.md) | Overview, native HTTP API, architecture, audio format |
 | [docs/api-compatibility.md](docs/api-compatibility.md) | Vendor routers — prefixes, endpoints, clients |
 | [docs/audio-formats.md](docs/audio-formats.md) | Accepted audio encodings and conversion |
+| [docs/transformers.md](docs/transformers.md) | Audio/utterance transformer plugins around transcription |
 | [docs/wyoming-integration.md](docs/wyoming-integration.md) | Home Assistant Voice / Wyoming bridge |
 | [docs/voice-pihole.md](docs/voice-pihole.md) | DNS-redirect + reverse-proxy recipes per vendor |
 
