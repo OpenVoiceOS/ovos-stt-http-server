@@ -26,6 +26,9 @@ dependencies = [
     "fastapi~=0.95",
     "uvicorn~=0.22",
     "ovos-utils>=0.0.32,<1.0.0",
+    # FastAPI needs python-multipart at runtime to service the multipart/form-data
+    # routes (whisper-cpp inference, wit.ai); without it those routers fail to load.
+    "python-multipart",
 ]
 
 [project.optional-dependencies]
@@ -34,7 +37,7 @@ audio = ["pydub"]
 # under test/integration/*_sdk_live.py actually run in CI instead of being
 # silently skipped by pytest.importorskip.
 test = [
-    "pytest", "httpx", "pytest-cov", "python-multipart", "requests", "uvicorn", "websockets",
+    "pytest", "httpx", "pytest-cov", "requests", "uvicorn", "websockets",
     "pydub",
     # vendor client SDKs driven by the e2e tests
     "openai", "deepgram-sdk", "assemblyai", "boto3", "google-cloud-speech",
