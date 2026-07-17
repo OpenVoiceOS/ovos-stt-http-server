@@ -11,6 +11,7 @@
 
 **Merged pull requests:**
 
+- feat: audio and utterance transformer pipelines [\#92](https://github.com/OpenVoiceOS/ovos-stt-server/pull/92) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): add ElevenLabs Scribe-compatible STT endpoint [\#90](https://github.com/OpenVoiceOS/ovos-stt-server/pull/90) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): add Gladia-compatible STT endpoint [\#89](https://github.com/OpenVoiceOS/ovos-stt-server/pull/89) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): add Groq-compatible STT endpoint [\#88](https://github.com/OpenVoiceOS/ovos-stt-server/pull/88) ([JarbasAl](https://github.com/JarbasAl))
