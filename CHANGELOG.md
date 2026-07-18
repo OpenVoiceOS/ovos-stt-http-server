@@ -11,6 +11,7 @@
 
 **Merged pull requests:**
 
+- fix: declare python-multipart as a runtime dependency [\#93](https://github.com/OpenVoiceOS/ovos-stt-server/pull/93) ([JarbasAl](https://github.com/JarbasAl))
 - feat: audio and utterance transformer pipelines [\#92](https://github.com/OpenVoiceOS/ovos-stt-server/pull/92) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): add ElevenLabs Scribe-compatible STT endpoint [\#90](https://github.com/OpenVoiceOS/ovos-stt-server/pull/90) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): add Gladia-compatible STT endpoint [\#89](https://github.com/OpenVoiceOS/ovos-stt-server/pull/89) ([JarbasAl](https://github.com/JarbasAl))
