@@ -5,8 +5,8 @@ A lightweight FastAPI server that exposes any OVOS STT plugin as an HTTP service
 ## Architecture
 
 - **Framework**: FastAPI with Uvicorn ASGI server.
-- **Plugin loading**: `ovos-plugin-manager` discovers and loads STT plugins by name — `ModelContainer` for single-language mode, `MultiModelContainer` for per-language model loading (both in `ovos_stt_http_server/__init__.py`).
-- **CORS**: Unconditional `allow_origins=["*"]` — `create_app()` in `ovos_stt_http_server/__init__.py`.
+- **Plugin loading**: `ovos-plugin-manager` discovers and loads STT plugins by name. `ModelContainer` handles single-language mode; `MultiModelContainer` handles per-language model loading (both in `ovos_stt_http_server/__init__.py`).
+- **CORS**: Unconditional `allow_origins=["*"]`, set in `create_app()` in `ovos_stt_http_server/__init__.py`.
 
 ## Endpoints
 
@@ -33,11 +33,11 @@ ovos-stt-server --engine ovos-stt-plugin-whisper --lang-engine ovos-audio-transf
 
 ## Audio Format
 
-Input audio must be raw PCM: 16 kHz, mono, 16-bit signed integer (int16). Send bytes directly as the POST body. The vendor-compat routers additionally accept their vendors' own audio encodings — see [audio-formats.md](audio-formats.md).
+Input audio must be raw PCM: 16 kHz, mono, 16-bit signed integer (int16). Send bytes directly as the POST body. The vendor-compat routers also accept their vendors' own audio encodings. See [audio-formats.md](audio-formats.md).
 
 ## See also
 
-- [api-compatibility.md](api-compatibility.md) — vendor-compatible STT endpoints (OpenAI, Deepgram, Google, AssemblyAI, …)
-- [audio-formats.md](audio-formats.md) — accepted audio encodings and conversion
-- [wyoming-integration.md](wyoming-integration.md) — Home Assistant Voice / Wyoming bridge
-- [voice-pihole.md](voice-pihole.md) — DNS-redirect + reverse-proxy recipes
+- [api-compatibility.md](api-compatibility.md): vendor-compatible STT endpoints (OpenAI, Deepgram, Google, AssemblyAI, and others)
+- [audio-formats.md](audio-formats.md): accepted audio encodings and conversion
+- [wyoming-integration.md](wyoming-integration.md): Home Assistant Voice / Wyoming bridge
+- [voice-pihole.md](voice-pihole.md): DNS-redirect + reverse-proxy recipes

@@ -1,8 +1,8 @@
 # `ovos-stt-http-server` Documentation Hub
 
 `ovos-stt-http-server` exposes any OVOS STT plugin as a network service. On
-its own it speaks one native protocol — but with compat routers enabled it
-also pretends to be every major cloud STT API and every popular
+its own it speaks one native protocol. With compat routers enabled it
+also answers as every major cloud STT API and every popular
 self-hosted server, so **unmodified consumer apps transparently land on
 this box** instead of a third-party cloud.
 
@@ -46,12 +46,12 @@ is in [`../examples/`](../examples/); full reference in
 | whisper.cpp HTTP server | `/inference` (+ OpenAI alias `/v1/audio/transcriptions`) |
 | vosk-server (WebRTC) | `/vosk-webrtc/offer` (needs the `aiortc` extra) |
 | faster-whisper-server | re-uses `/v1/audio/transcriptions` |
-| Wyoming (HA) | external adapter — see [wyoming-integration.md](wyoming-integration.md) |
+| Wyoming (HA) | external adapter, see [wyoming-integration.md](wyoming-integration.md) |
 
 ### OpenAI-compatible Whisper hosts
 
 Apps targeting Groq, Cloudflare Workers AI, Fireworks AI, Together AI, or
-OpenRouter already speak the OpenAI `/v1/audio/transcriptions` contract — point
+OpenRouter already speak the OpenAI `/v1/audio/transcriptions` contract. Point
 them at this server's `/v1` prefix.
 
 ### Planned / not mounted by default
@@ -74,7 +74,7 @@ and kaldi-gstreamer-server (`/client/ws/speech`).
 
 Every compat router with a streaming surface (Deepgram WS, AssemblyAI
 realtime, Speechmatics RT, Azure WS, Watson WS, vosk WS, AWS streaming,
-Chromium) runs as buffered batch — audio is collected for the lifetime
+Chromium) runs as buffered batch. Audio is collected for the lifetime
 of the stream and a single final transcript is emitted on close. OVOS
 STT plugins don't expose a partial / interim hypothesis interface.
 
@@ -84,13 +84,13 @@ Needed:
 
 ### Vendor coverage gaps
 
-- **Web Speech API native binary protocol** — the `Sec-WebSocket-Protocol`
+- **Web Speech API native binary protocol**: the `Sec-WebSocket-Protocol`
   framing modern Chrome/Edge use for the in-browser `SpeechRecognition`
   Web API. Distinct from the legacy `/speech-api/v2/recognize` REST.
-- **Rev.ai** — REST + streaming WS.
-- **Soniox** — gRPC streaming.
-- **AssemblyAI streaming V3** — schema differs from the V2 realtime.
-- **whisper.cpp `verbose_json` with segment timestamps** — needs VAD pipeline.
-- **AWS Transcribe streaming over real HTTP/2 event-stream** — the WS surface
-  ships a plain WS; SDK-level apps that bypass WS need a translator.
-- **vosk gRPC `StatsService`** — second proto service not implemented.
+- **Rev.ai**: REST + streaming WS.
+- **Soniox**: gRPC streaming.
+- **AssemblyAI streaming V3**: schema differs from the V2 realtime.
+- **whisper.cpp `verbose_json` with segment timestamps**: needs VAD pipeline.
+- **AWS Transcribe streaming over real HTTP/2 event-stream**: the WS surface
+  ships a plain WS. SDK-level apps that bypass WS need a translator.
+- **vosk gRPC `StatsService`**: second proto service not implemented.

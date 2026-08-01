@@ -53,3 +53,6 @@ run the audio transformer on that device instead — and never enable the
 same plugin on both sides, or it is applied twice. Similarly, if the OVOS
 stack consuming this server already runs utterance transformers
 (ovos-core does), enable each text plugin in exactly one of the two places.
+
+---
+[← API compatibility](api-compatibility.md) · [Home](README.md) · [Wyoming integration →](wyoming-integration.md)

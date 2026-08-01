@@ -13,7 +13,7 @@ to offload transcription from an OVOS device, or point existing tooling at the
 - [Configuration](#configuration)
 - [Usage](#usage)
 - [HTTP API](#http-api)
-- [AI Agent Integration](#ai-agent-integration) — MCP & UTCP
+- [AI Agent Integration](#ai-agent-integration): MCP & UTCP
 - [Vendor-compatible endpoints](#vendor-compatible-endpoints)
 - [Docker](#docker)
 - [Documentation](#documentation)
@@ -26,7 +26,7 @@ to offload transcription from an OVOS device, or point existing tooling at the
 pip install ovos-stt-http-server
 ```
 
-The server only hosts plugins — install at least one STT plugin alongside it:
+The server only hosts plugins. Install at least one STT plugin alongside it:
 
 ```bash
 pip install ovos-stt-plugin-fasterwhisper
@@ -84,7 +84,7 @@ The native API is unauthenticated. Audio is sent as the raw request body.
 
 | Method & path | Body | Purpose |
 |---------------|------|---------|
-| `GET /status` | — | Service status and loaded plugin names |
+| `GET /status` | none | Service status and loaded plugin names |
 | `POST /stt` | raw PCM bytes | Transcribe audio → plain-text transcript |
 | `POST /lang_detect` | raw PCM bytes | Detect the spoken language → `{"lang", "conf"}` |
 
@@ -127,14 +127,14 @@ standard mycroft.conf sections:
 ```
 
 Enabling an utterance transformer server-side means clients receive a
-**different transcript than the raw STT output** — that's the tool for
-fleet-wide vocabulary corrections. See
+**different transcript than the raw STT output**. Use it for fleet-wide
+vocabulary corrections. See
 [docs/transformers.md](docs/transformers.md) for when to run transformers
 server-side vs on-device and how to avoid double-processing.
 
 ## AI Agent Integration
 
-### MCP — Model Context Protocol
+### MCP: Model Context Protocol
 
 Install the optional extra to expose the server as an MCP tool provider:
 
@@ -201,7 +201,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### UTCP — Universal Tool Calling Protocol
+### UTCP: Universal Tool Calling Protocol
 
 No extra dependencies are required. Every running server exposes a UTCP manual at:
 
@@ -238,8 +238,8 @@ Register a UTCP client's provider config at `/utcp`:
 The server mounts compat routers under per-vendor prefixes so existing tools and
 SDKs that already target a cloud STT API can be pointed at your local OVOS
 instance with only a base-URL / endpoint override. Every router accepts (and
-silently ignores) the vendor's auth token — authentication is your reverse
-proxy's job.
+silently ignores) the vendor's auth token. Authentication is the job of your
+reverse proxy.
 
 | Vendor | Prefix | Client (see `examples/`) |
 |--------|--------|--------------------------|
@@ -293,7 +293,7 @@ Each plugin can ship its own Dockerfile in its repository using
 | Document | Covers |
 |----------|--------|
 | [docs/index.md](docs/index.md) | Overview, native HTTP API, architecture, audio format |
-| [docs/api-compatibility.md](docs/api-compatibility.md) | Vendor routers — prefixes, endpoints, clients |
+| [docs/api-compatibility.md](docs/api-compatibility.md) | Vendor routers: prefixes, endpoints, clients |
 | [docs/audio-formats.md](docs/audio-formats.md) | Accepted audio encodings and conversion |
 | [docs/transformers.md](docs/transformers.md) | Audio/utterance transformer plugins around transcription |
 | [docs/wyoming-integration.md](docs/wyoming-integration.md) | Home Assistant Voice / Wyoming bridge |
