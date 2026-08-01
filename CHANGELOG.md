@@ -11,6 +11,7 @@
 
 **Merged pull requests:**
 
+- docs: rewrite README in Simplified Technical English [\#96](https://github.com/OpenVoiceOS/ovos-stt-server/pull/96) ([JarbasAl](https://github.com/JarbasAl))
 - fix: declare python-multipart as a runtime dependency [\#93](https://github.com/OpenVoiceOS/ovos-stt-server/pull/93) ([JarbasAl](https://github.com/JarbasAl))
 - feat: audio and utterance transformer pipelines [\#92](https://github.com/OpenVoiceOS/ovos-stt-server/pull/92) ([JarbasAl](https://github.com/JarbasAl))
 - feat\(compat\): add ElevenLabs Scribe-compatible STT endpoint [\#90](https://github.com/OpenVoiceOS/ovos-stt-server/pull/90) ([JarbasAl](https://github.com/JarbasAl))
