@@ -3,7 +3,7 @@
 A single network-layer interception recipe per cloud STT vendor, so that
 **unmodified consumer apps stop calling cloud services** and land on your
 `ovos-stt-http-server` box instead. No client SDK changes, no API key
-swaps, no app-config edits — just DNS + a TLS-terminating reverse proxy.
+swaps, no app-config edits. Just DNS and a TLS-terminating reverse proxy.
 
 The pattern across every vendor is the same:
 
@@ -23,8 +23,8 @@ This document holds the consolidated config. Each per-vendor section in
 block here.
 
 > :warning: **Intercepting a hostname catches *every* request to it.**
-> `www.google.com` is shared with chat, search, Drive, etc.; intercepting
-> it without forwarding the non-STT paths back upstream will break those
+> `www.google.com` is shared with chat, search, Drive, etc. Intercepting
+> it without forwarding the non-STT paths back upstream breaks those
 > features on the client. The example configs below isolate the STT path
 > and either 404 or transparent-proxy everything else.
 
@@ -59,7 +59,7 @@ hostname in the SAN list. Two common approaches:
    MDM, dotfiles, system keychain, `update-ca-certificates`).
 3. Issue per-hostname leaf certs from this CA.
 
-This is what corporate VPN + DLP deployments already do — re-use that
+This is what corporate VPN + DLP deployments already do. Re-use that
 trust chain.
 
 ### B) mkcert (lab / dev)
@@ -146,7 +146,7 @@ server {
 ```
 
 > :information_source: The `google-cloud-speech` Python SDK builds host-only
-> endpoints; for it to work you also need the in-Python monkey-patch
+> endpoints. For it to work you also need the in-Python monkey-patch
 > documented in `api-compatibility.md` under Google STT. Raw REST clients
 > don't need that.
 
@@ -314,10 +314,10 @@ server {
 
 ### Chromium / Chrome Web Speech (`www.google.com/speech-api`)
 
-This one is special — `www.google.com` is shared with **every other Google
+This one is special. `www.google.com` is shared with **every other Google
 service**, so the nginx block must forward unrelated paths back to the
 real Google. The upstream endpoint is plain HTTP, but modern Chrome may
-upgrade it to HTTPS — listen on both.
+upgrade it to HTTPS. Listen on both.
 
 ```nginx
 server {
@@ -352,8 +352,8 @@ server {
 
 For self-hosted protocols (vosk-server, kaldi-gstreamer-server,
 whisper.cpp) you usually replace them at the bind-port level rather than
-intercepting a public hostname. Stop the old process; start
-ovos-stt-http-server on the same port; clients keep working.
+intercepting a public hostname. Stop the old process, start
+ovos-stt-http-server on the same port, and clients keep working.
 
 See each per-protocol section in `api-compatibility.md` for the matching
 nginx config (most just need the port-swap and a single `location /`
@@ -388,4 +388,7 @@ A complete "voice pihole" deployment is:
 
 Once the DNS rewrite + TLS cert + reverse proxy are in place, **every**
 consumer app on the LAN that uses any of the above APIs is automatically
-served by your local OVOS plugin — no client-side change required.
+served by your local OVOS plugin. No client-side change is required.
+
+---
+[← Wyoming integration](wyoming-integration.md) · [Home](README.md)

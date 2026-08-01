@@ -35,3 +35,6 @@ replies with `501 Not Implemented`.
 | vosk WS / MQTT | raw 16-bit PCM | rate from `config` |
 | kaldi-gstreamer | `audio/x-raw,rate=...,format=S16LE,...` caps | parsed from content-type |
 | whisper.cpp | `multipart/form-data` (`file=@`) | any audio pydub can read |
+
+---
+[← Index](index.md) · [Home](README.md) · [API compatibility →](api-compatibility.md)
