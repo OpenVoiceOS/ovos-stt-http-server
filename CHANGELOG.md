@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/OpenVoiceOS/ovos-stt-server/tree/HEAD)
+## [0.25.1a3](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.25.1a3) (2026-08-02)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a10...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a10...0.25.1a3)
 
 **Closed issues:**
 
@@ -11,6 +11,7 @@
 
 **Merged pull requests:**
 
+- ci: migrate release workflow to shared OpenVoiceOS automations [\#98](https://github.com/OpenVoiceOS/ovos-stt-server/pull/98) ([JarbasAl](https://github.com/JarbasAl))
 - docs: rewrite README in Simplified Technical English [\#96](https://github.com/OpenVoiceOS/ovos-stt-server/pull/96) ([JarbasAl](https://github.com/JarbasAl))
 - fix: declare python-multipart as a runtime dependency [\#93](https://github.com/OpenVoiceOS/ovos-stt-server/pull/93) ([JarbasAl](https://github.com/JarbasAl))
 - feat: audio and utterance transformer pipelines [\#92](https://github.com/OpenVoiceOS/ovos-stt-server/pull/92) ([JarbasAl](https://github.com/JarbasAl))
