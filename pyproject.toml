@@ -45,7 +45,13 @@ test = [
     # SpeechRecognition-backed chromium SDK e2e test
     "SpeechRecognition", "ovos-stt-plugin-chromium",
     # self-hosted / streaming protocol clients
-    "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt",
+    #
+    # amqtt>=0.11 is required on Python 3.10: amqtt<0.11 pins PyYAML<6.0, and
+    # that old PyYAML sdist fails to build under modern setuptools/Cython
+    # ("AttributeError: 'build_ext' object has no attribute 'cython_sources'").
+    # Without the floor, the resolver silently picks amqtt==0.10.1 for 3.10
+    # even though a compatible 0.11.x (needs PyYAML==6.0.2) is available.
+    "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt>=0.11",
     # MCP server, exercised by the MCP/UTCP tests
     "mcp>=1.0.0,<2.0.0",
 ]
