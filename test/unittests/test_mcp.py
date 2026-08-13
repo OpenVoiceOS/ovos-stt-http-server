@@ -12,7 +12,7 @@
 """Tests for the MCP server integration.
 
 All tests mock the STT engine so no real model is required.
-The ``mcp`` package itself is required (pip install 'ovos-stt-http-server[mcp]').
+The ``fastmcp`` package itself is required (pip install 'ovos-stt-http-server[mcp]').
 """
 import asyncio
 import base64
@@ -38,8 +38,8 @@ def _get_tools(mcp):
 
 
 def _call_tool(mcp, name, kwargs):
-    content_list, _structured = asyncio.run(mcp.call_tool(name, kwargs))
-    return content_list
+    result = asyncio.run(mcp.call_tool(name, kwargs))
+    return result.content
 
 
 def _extract_text(content_list) -> str:
@@ -62,10 +62,10 @@ def _extract_text(content_list) -> str:
 class TestBuildMcpServer:
     @pytest.fixture(autouse=True)
     def _check_mcp(self):
-        import mcp
+        import fastmcp
 
     def test_returns_fastmcp_instance(self):
-        from mcp.server.fastmcp import FastMCP
+        from fastmcp import FastMCP
         from ovos_stt_http_server.mcp_server import build_mcp_server
         mcp = build_mcp_server(_make_model())
         assert isinstance(mcp, FastMCP)
@@ -86,7 +86,7 @@ class TestBuildMcpServer:
         from ovos_stt_http_server.mcp_server import build_mcp_server
         mcp = build_mcp_server(_make_model())
         transcribe = next(t for t in _get_tools(mcp) if t.name == "transcribe")
-        props = transcribe.inputSchema.get("properties", {})
+        props = transcribe.parameters.get("properties", {})
         # at least one of the two audio input fields must be present
         assert "audio_b64" in props or "audio_path" in props
 
@@ -94,11 +94,11 @@ class TestBuildMcpServer:
         from ovos_stt_http_server.mcp_server import build_mcp_server
         mcp = build_mcp_server(_make_model())
         transcribe = next(t for t in _get_tools(mcp) if t.name == "transcribe")
-        props = transcribe.inputSchema.get("properties", {})
+        props = transcribe.parameters.get("properties", {})
         assert "lang" in props
 
     def test_custom_server_name_accepted(self):
-        from mcp.server.fastmcp import FastMCP
+        from fastmcp import FastMCP
         from ovos_stt_http_server.mcp_server import build_mcp_server
         mcp = build_mcp_server(_make_model(), server_name="my-stt")
         assert isinstance(mcp, FastMCP)
@@ -111,13 +111,13 @@ class TestBuildMcpServer:
 class TestTranscribeTool:
     @pytest.fixture(autouse=True)
     def _check_mcp(self):
-        import mcp
+        import fastmcp
 
     def _call(self, model, **kwargs):
         from ovos_stt_http_server.mcp_server import build_mcp_server
         mcp = build_mcp_server(model)
-        content_list, _ = asyncio.run(mcp.call_tool("transcribe", kwargs))
-        return _extract_text(content_list)
+        result = asyncio.run(mcp.call_tool("transcribe", kwargs))
+        return _extract_text(result.content)
 
     def test_transcribe_with_audio_b64(self):
         model = _make_model("hello world")
@@ -246,7 +246,7 @@ class TestTranscribeTool:
 class TestMountMcpOnFastapi:
     @pytest.fixture(autouse=True)
     def _check_mcp(self):
-        import mcp
+        import fastmcp
 
     def test_mount_does_not_raise(self):
         from fastapi import FastAPI
@@ -295,15 +295,12 @@ class TestMcpModuleImportDegradation:
         import sys
         import importlib
 
-        # Block the mcp package by inserting a sentinel that raises ImportError.
-        sentinel = object()  # not a real module
-        blocked_keys = [k for k in list(sys.modules) if k == "mcp" or k.startswith("mcp.")]
+        # Block the fastmcp package by inserting a sentinel that raises ImportError.
+        blocked_keys = [k for k in list(sys.modules) if k == "fastmcp" or k.startswith("fastmcp.")]
         saved = {k: sys.modules.pop(k) for k in blocked_keys}
         # Use a fake module that raises on attribute access is complex;
-        # simpler: set the key to None which causes ImportError on `import mcp`.
-        sys.modules["mcp"] = None  # type: ignore
-        sys.modules["mcp.server"] = None  # type: ignore
-        sys.modules["mcp.server.fastmcp"] = None  # type: ignore
+        # simpler: set the key to None which causes ImportError on `import fastmcp`.
+        sys.modules["fastmcp"] = None  # type: ignore
 
         # Remove the already-cached mcp_server module so it re-executes.
         mcp_server_saved = sys.modules.pop("ovos_stt_http_server.mcp_server", None)
@@ -312,8 +309,7 @@ class TestMcpModuleImportDegradation:
             assert fresh_mod._MCP_AVAILABLE is False
         finally:
             # Restore everything.
-            for k in ["mcp", "mcp.server", "mcp.server.fastmcp"]:
-                sys.modules.pop(k, None)
+            sys.modules.pop("fastmcp", None)
             sys.modules.update(saved)
             if mcp_server_saved is not None:
                 sys.modules["ovos_stt_http_server.mcp_server"] = mcp_server_saved

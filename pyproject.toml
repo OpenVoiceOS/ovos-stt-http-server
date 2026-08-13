@@ -45,16 +45,22 @@ test = [
     # SpeechRecognition-backed chromium SDK e2e test
     "SpeechRecognition", "ovos-stt-plugin-chromium",
     # self-hosted / streaming protocol clients
-    "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt",
+    # amqtt is pinned to the 0.11.x line (not just left unconstrained) because
+    # the unconstrained top-level "websockets" dep above can otherwise resolve
+    # to a version that conflicts with amqtt 0.11.x's exact websockets==15.0.1
+    # pin; without this floor the resolver silently backtracks amqtt all the
+    # way down to the ancient, broken 0.10.0a1 prerelease on some interpreters
+    # (observed on Python 3.10), which does not even provide the amqtt module.
+    "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt>=0.11,<1",
     # MCP server, exercised by the MCP/UTCP tests
-    "mcp>=1.0.0,<2.0.0",
+    "fastmcp>=3,<4",
 ]
 # vosk-webrtc needs aiortc, which builds against system ffmpeg-7 dev headers and
 # has no wheels for the newest Python in the CI matrix. It is therefore kept out
 # of the required `test` extra; its e2e test skips when aiortc is absent (the
 # webrtc router is itself an optional, ImportError-gated feature of the server).
 test-webrtc = ["aiortc"]
-mcp = ["mcp>=1.0.0,<2.0.0"]
+mcp = ["fastmcp>=3,<4"]
 
 [project.urls]
 Homepage = "https://github.com/OpenVoiceOS/ovos-stt-http-server"
