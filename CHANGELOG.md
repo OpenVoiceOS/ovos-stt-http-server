@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.25.2a1](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.25.2a1) (2026-08-13)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.25.1a4...0.25.2a1)
+
+**Merged pull requests:**
+
+- fix: resolve plugin config from mycroft.conf when none is passed [\#97](https://github.com/OpenVoiceOS/ovos-stt-server/pull/97) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.25.1a4](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.25.1a4) (2026-08-13)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.25.1a3...0.25.1a4)
@@ -72,11 +80,15 @@
 
 ## [0.1.5a7](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.1.5a7) (2025-12-19)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a3...0.1.5a7)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a4...0.1.5a7)
 
 **Merged pull requests:**
 
 - Update dependency ovos-plugin-manager to v2 [\#43](https://github.com/OpenVoiceOS/ovos-stt-server/pull/43) ([renovate[bot]](https://github.com/apps/renovate))
+
+## [0.1.5a4](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.1.5a4) (2025-12-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a3...0.1.5a4)
 
 ## [0.1.5a3](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.1.5a3) (2025-12-18)
 
@@ -84,11 +96,7 @@
 
 ## [0.1.5a5](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.1.5a5) (2025-12-18)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a4...0.1.5a5)
-
-## [0.1.5a4](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.1.5a4) (2025-12-18)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a2...0.1.5a4)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a2...0.1.5a5)
 
 **Merged pull requests:**
 
