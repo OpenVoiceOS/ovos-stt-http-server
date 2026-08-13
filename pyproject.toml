@@ -45,12 +45,15 @@ test = [
     # SpeechRecognition-backed chromium SDK e2e test
     "SpeechRecognition", "ovos-stt-plugin-chromium",
     # self-hosted / streaming protocol clients
-    # amqtt is pinned to the 0.11.x line (not just left unconstrained) because
-    # the unconstrained top-level "websockets" dep above can otherwise resolve
-    # to a version that conflicts with amqtt 0.11.x's exact websockets==15.0.1
-    # pin; without this floor the resolver silently backtracks amqtt all the
-    # way down to the ancient, broken 0.10.0a1 prerelease on some interpreters
-    # (observed on Python 3.10), which does not even provide the amqtt module.
+    #
+    # amqtt needs both a floor and a ceiling. Below 0.11 it pins PyYAML<6.0,
+    # whose old sdist fails to build under modern setuptools/Cython
+    # ("AttributeError: 'build_ext' object has no attribute 'cython_sources'").
+    # Without the <1 cap, the unconstrained top-level "websockets" dep above can
+    # resolve to a version that conflicts with amqtt 0.11.x's exact
+    # websockets==15.0.1 pin, and the resolver silently backtracks all the way
+    # to the ancient, broken 0.10.0a1 prerelease (observed on Python 3.10),
+    # which does not even provide the amqtt module.
     "grpcio", "protobuf", "grpcio-tools", "paho-mqtt", "amqtt>=0.11,<1",
     # MCP server, exercised by the MCP/UTCP tests
     "fastmcp>=3,<4",

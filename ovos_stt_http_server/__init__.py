@@ -80,6 +80,10 @@ class TransformerPipelines:
 class ModelContainer(TransformerPipelines):
     def __init__(self, plugin: str, lang_plugin: str = None, config: dict = None):
         self.init_transformers()
+        if config is None:
+            # match OVOSSTTFactory behaviour: pick up the plugin's section from
+            # mycroft.conf so a mounted config file can select model/voice/etc.
+            config = Configuration().get("stt", {}).get(plugin) or {}
         plugin = load_stt_plugin(plugin)
         self.lang_plugin = None
         if not plugin:
@@ -115,6 +119,8 @@ class MultiModelContainer(TransformerPipelines):
     def __init__(self, plugin: str, lang_plugin: str = None, config: dict = None):
         # transformer chains are shared across the per-language engines
         self.init_transformers()
+        if config is None:
+            config = Configuration().get("stt", {}).get(plugin) or {}
         self.plugin_class = load_stt_plugin(plugin)
         self.lang_plugin = None
         if not self.plugin_class:
