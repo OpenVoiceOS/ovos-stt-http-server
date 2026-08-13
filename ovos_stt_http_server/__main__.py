@@ -27,10 +27,12 @@ def main():
     parser.add_argument("--host", help="host", default="0.0.0.0")
     parser.add_argument("--multi", help="Load a plugin instance per language (force lang support)",
                         action="store_true")
+    parser.add_argument("--mcp", help="mount MCP server at /mcp (requires ovos-stt-http-server[mcp])",
+                        action="store_true")
     args = parser.parse_args()
 
     server, engine = start_stt_server(args.engine, lang_engine=args.lang_engine,
-                                      multi=bool(args.multi))
+                                      multi=bool(args.multi), enable_mcp=bool(args.mcp))
     LOG.info("Server Started")
     uvicorn.run(server, host=args.host, port=int(args.port))
 

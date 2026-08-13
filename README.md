@@ -36,7 +36,7 @@ Optional extras:
 
 | Extra | Installs | Enables |
 |-------|----------|---------|
-| `mcp` | `pip install "ovos-stt-http-server[mcp]"` | embedded [MCP](#mcp--model-context-protocol) server at `/mcp` |
+| `mcp` | `pip install "ovos-stt-http-server[mcp]"` | embedded [MCP](#mcp--model-context-protocol) server at `/mcp` (requires `--mcp` flag) |
 | `audio` | `pip install "ovos-stt-http-server[audio]"` | non-WAV audio decoding (`pydub`) for the vendor-compat routers |
 
 ## Configuration
@@ -58,7 +58,7 @@ The STT plugin is configured exactly as it would be inside an assistant, under
 ```bash
 $ ovos-stt-server --help
 usage: ovos-stt-server [-h] --engine ENGINE [--lang-engine LANG_ENGINE]
-                       [--host HOST] [--port PORT] [--multi]
+                       [--host HOST] [--port PORT] [--multi] [--mcp]
 
 options:
   -h, --help                 show this help message and exit
@@ -67,6 +67,7 @@ options:
   --host HOST                host to bind (default: 0.0.0.0)
   --port PORT                TCP port (default: 8080)
   --multi                    load one plugin instance per language (more memory)
+  --mcp                      mount MCP server at /mcp (requires ovos-stt-http-server[mcp])
 ```
 
 For example, to serve [faster-whisper](https://github.com/OpenVoiceOS/ovos-stt-plugin-fasterwhisper)
@@ -136,15 +137,19 @@ server-side vs on-device and how to avoid double-processing.
 
 ### MCP: Model Context Protocol
 
-Install the optional extra to expose the server as an MCP tool provider:
+Install the optional extra and start the server with `--mcp` to expose it as an
+MCP tool provider:
 
 ```bash
 pip install "ovos-stt-http-server[mcp]"
+ovos-stt-server --engine ovos-stt-plugin-fasterwhisper --mcp
 ```
 
-When `mcp` is installed, the server automatically mounts an MCP endpoint at `/mcp`
-using the streamable-HTTP transport (compatible with both the legacy SSE path `/mcp/sse`
-and the newer `POST /mcp` format).
+Installing the `mcp` extra alone does **not** mount the endpoint — the flag is
+required. With `--mcp` set, the server mounts an MCP endpoint at `/mcp` using
+the streamable-HTTP transport (compatible with both the legacy SSE path
+`/mcp/sse` and the newer `POST /mcp` format). If `--mcp` is passed without the
+extra installed, the server logs a warning and starts without `/mcp`.
 
 #### Connecting an MCP client
 

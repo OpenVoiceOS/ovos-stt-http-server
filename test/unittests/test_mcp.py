@@ -328,13 +328,15 @@ class TestCreateAppMcpDegradation:
         with patch("ovos_stt_http_server.ModelContainer") as mc:
             mc.return_value = _make_model()
             from ovos_stt_http_server import create_app
-            app, model = create_app("mock-stt")
+            # enable_mcp=True so this exercises the mount attempt/degradation path;
+            # MCP is opt-in now, so create_app("mock-stt") alone would never try to mount.
+            app, model = create_app("mock-stt", enable_mcp=True)
 
         from fastapi import FastAPI
         assert isinstance(app, FastAPI)
 
     def test_create_app_mcp_import_error_caught(self):
-        """create_app() catches ImportError from mount_mcp_on_fastapi gracefully.
+        """create_app(enable_mcp=True) catches ImportError from mount_mcp_on_fastapi gracefully.
 
         Patches the mcp_server submodule in sys.modules so the ``from … import``
         inside create_app triggers an ImportError through the module's own guard.
@@ -350,7 +352,7 @@ class TestCreateAppMcpDegradation:
             sys.modules["ovos_stt_http_server.mcp_server"] = mcp_mod  # already patched
             try:
                 from ovos_stt_http_server import create_app
-                app, model = create_app("mock-stt")
+                app, model = create_app("mock-stt", enable_mcp=True)
             finally:
                 if saved is not None:
                     sys.modules["ovos_stt_http_server.mcp_server"] = saved

@@ -296,3 +296,50 @@ def test_multi_model_container_shares_transformers(load_stt):
     mm.utterance_transformers = FakeUtteranceService()
     assert mm.process_audio(b"x", "en") == "corrected:transcribed:en"
     assert mm.process_audio(b"x", "de") == "corrected:transcribed:de"
+
+
+# ---------- MCP is opt-in via enable_mcp / --mcp ----------
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_create_app_default_does_not_mount_mcp(load_stt):
+    """Without enable_mcp, /mcp must never be mounted even if the extra is installed."""
+    load_stt.return_value = FakeSTT
+    app, _model = srv.create_app("fake-stt")
+    route_paths = [getattr(r, "path", "") for r in app.routes]
+    assert not any(p == "/mcp" or p.startswith("/mcp/") for p in route_paths)
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_create_app_enable_mcp_mounts_route(load_stt):
+    """enable_mcp=True must mount an /mcp route when the mcp extra is available."""
+    pytest.importorskip("fastmcp")
+    load_stt.return_value = FakeSTT
+    app, _model = srv.create_app("fake-stt", enable_mcp=True)
+    route_paths = [getattr(r, "path", "") for r in app.routes]
+    assert any(p == "/mcp" or p.startswith("/mcp/") for p in route_paths)
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_create_app_enable_mcp_false_by_default_kwarg(load_stt):
+    """create_app's enable_mcp keyword defaults to False."""
+    import inspect
+    sig = inspect.signature(srv.create_app)
+    assert sig.parameters["enable_mcp"].default is False
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_start_stt_server_threads_enable_mcp(load_stt):
+    """start_stt_server must forward enable_mcp through to create_app."""
+    pytest.importorskip("fastmcp")
+    load_stt.return_value = FakeSTT
+    app, _model = srv.start_stt_server("fake-stt", enable_mcp=True)
+    route_paths = [getattr(r, "path", "") for r in app.routes]
+    assert any(p == "/mcp" or p.startswith("/mcp/") for p in route_paths)
+
+
+@patch("ovos_stt_http_server.load_stt_plugin")
+def test_start_stt_server_default_no_mcp(load_stt):
+    load_stt.return_value = FakeSTT
+    app, _model = srv.start_stt_server("fake-stt")
+    route_paths = [getattr(r, "path", "") for r in app.routes]
+    assert not any(p == "/mcp" or p.startswith("/mcp/") for p in route_paths)

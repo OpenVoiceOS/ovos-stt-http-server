@@ -173,7 +173,8 @@ class MultiModelContainer(TransformerPipelines):
         return self.transform_utterance(utterance, lang)
 
 
-def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
+def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False,
+               enable_mcp: bool = False):
     """
     Create and configure a FastAPI app that exposes STT and language-detection endpoints.
 
@@ -189,6 +190,7 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
         stt_plugin: Name or identifier of the STT plugin to load.
         lang_plugin: Name or identifier of an optional language-detection plugin.
         multi: If True, use a MultiModelContainer (one engine per language).
+        enable_mcp: If True, mount the MCP server at /mcp (requires the `mcp` extra).
 
     Returns:
         tuple: (app, model) where `app` is the configured FastAPI application and `model` is
@@ -287,20 +289,23 @@ def create_app(stt_plugin: str, lang_plugin: str = None, multi: bool = False):
     from ovos_stt_http_server.routers.groq import make_groq_router
     app.include_router(make_groq_router(model))
 
-    # Mount MCP server when the optional dependency is available.
-    try:
-        from ovos_stt_http_server.mcp_server import mount_mcp_on_fastapi
-        mount_mcp_on_fastapi(app, model)
-    except ImportError:
-        LOG.debug("MCP extra not installed; skipping MCP server. "
-                  "Enable with: pip install 'ovos-stt-http-server[mcp]'")
+    # Mount MCP server only when explicitly requested via --mcp.
+    if enable_mcp:
+        try:
+            from ovos_stt_http_server.mcp_server import mount_mcp_on_fastapi
+            mount_mcp_on_fastapi(app, model)
+        except ImportError:
+            LOG.warning("MCP was requested (--mcp) but the optional dependency "
+                        "is not installed; skipping MCP server. "
+                        "Enable with: pip install 'ovos-stt-http-server[mcp]'")
 
     return app, model
 
 
 def start_stt_server(engine: str,
                      lang_engine: str = None,
-                     multi: bool = False) -> tuple:
+                     multi: bool = False,
+                     enable_mcp: bool = False) -> tuple:
     """
     Initialize and return a configured FastAPI STT server and its model container.
 
@@ -308,9 +313,10 @@ def start_stt_server(engine: str,
         engine: STT plugin name to load.
         lang_engine: Optional language-detection plugin name.
         multi: If True, load one engine per language via MultiModelContainer.
+        enable_mcp: If True, mount the MCP server at /mcp (requires the `mcp` extra).
 
     Returns:
         tuple: (app, model) — the FastAPI application and the model container.
     """
-    app, engine = create_app(engine, lang_engine, multi)
+    app, engine = create_app(engine, lang_engine, multi, enable_mcp)
     return app, engine
