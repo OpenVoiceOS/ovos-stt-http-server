@@ -110,7 +110,7 @@ def mcp_server():
         pytest.skip("mcp extra not installed")
 
     mcp = build_mcp_server(stub)
-    mcp_app = mcp.streamable_http_app()
+    mcp_app = mcp.http_app()
 
     try:
         base_url, server, thread = _start_server(mcp_app, health_path="/mcp")

@@ -1,8 +1,16 @@
 # Changelog
 
-## [Unreleased](https://github.com/OpenVoiceOS/ovos-stt-server/tree/HEAD)
+## [0.25.1a4](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.25.1a4) (2026-08-13)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a10...HEAD)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.25.1a3...0.25.1a4)
+
+**Merged pull requests:**
+
+- refactor: migrate MCP server to the fastmcp package [\#100](https://github.com/OpenVoiceOS/ovos-stt-server/pull/100) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.25.1a3](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.25.1a3) (2026-08-02)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a10...0.25.1a3)
 
 **Closed issues:**
 
@@ -11,6 +19,7 @@
 
 **Merged pull requests:**
 
+- ci: migrate release workflow to shared OpenVoiceOS automations [\#98](https://github.com/OpenVoiceOS/ovos-stt-server/pull/98) ([JarbasAl](https://github.com/JarbasAl))
 - docs: rewrite README in Simplified Technical English [\#96](https://github.com/OpenVoiceOS/ovos-stt-server/pull/96) ([JarbasAl](https://github.com/JarbasAl))
 - fix: declare python-multipart as a runtime dependency [\#93](https://github.com/OpenVoiceOS/ovos-stt-server/pull/93) ([JarbasAl](https://github.com/JarbasAl))
 - feat: audio and utterance transformer pipelines [\#92](https://github.com/OpenVoiceOS/ovos-stt-server/pull/92) ([JarbasAl](https://github.com/JarbasAl))
@@ -63,11 +72,15 @@
 
 ## [0.1.5a7](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.1.5a7) (2025-12-19)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a5...0.1.5a7)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a3...0.1.5a7)
 
 **Merged pull requests:**
 
 - Update dependency ovos-plugin-manager to v2 [\#43](https://github.com/OpenVoiceOS/ovos-stt-server/pull/43) ([renovate[bot]](https://github.com/apps/renovate))
+
+## [0.1.5a3](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.1.5a3) (2025-12-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a5...0.1.5a3)
 
 ## [0.1.5a5](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.1.5a5) (2025-12-18)
 
@@ -75,11 +88,7 @@
 
 ## [0.1.5a4](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.1.5a4) (2025-12-18)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a3...0.1.5a4)
-
-## [0.1.5a3](https://github.com/OpenVoiceOS/ovos-stt-server/tree/0.1.5a3) (2025-12-18)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a2...0.1.5a3)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-stt-server/compare/0.1.5a2...0.1.5a4)
 
 **Merged pull requests:**
 

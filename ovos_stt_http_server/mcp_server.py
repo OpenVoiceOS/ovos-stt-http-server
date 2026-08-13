@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 _MCP_AVAILABLE = False
 try:
-    from mcp.server.fastmcp import FastMCP  # type: ignore
+    from fastmcp import FastMCP  # type: ignore
     _MCP_AVAILABLE = True
 except ImportError:
     pass
@@ -70,7 +70,7 @@ def build_mcp_server(
         A ready-to-use FastMCP server.
     """
     _require_mcp()
-    from mcp.server.fastmcp import FastMCP  # type: ignore
+    from fastmcp import FastMCP  # type: ignore
     from ovos_plugin_manager.utils.audio import AudioData
 
     mcp = FastMCP(server_name)
@@ -153,18 +153,20 @@ def mount_mcp_on_fastapi(app, model, path: str = "/mcp") -> None:
     # Serve the streamable-HTTP transport at the mount root so the endpoint
     # is exactly *path* (FastMCP defaults to an internal /mcp sub-path, which
     # would yield /mcp/mcp when mounted).
-    mcp.settings.streamable_http_path = "/"
-    app.mount(path, mcp.streamable_http_app())
+    mcp_app = mcp.http_app(path="/", transport="streamable-http")
+    app.mount(path, mcp_app)
 
     # Starlette does not propagate lifespan events to mounted sub-apps, and
-    # the streamable transport requires its session manager running.
+    # the streamable-HTTP transport requires its session manager running.
+    # FastMCP exposes the required lifespan via `mcp_app.lifespan`; it must
+    # be entered alongside the host application's own lifespan.
     from contextlib import asynccontextmanager
     _original_lifespan = app.router.lifespan_context
 
     @asynccontextmanager
     async def _lifespan_with_mcp(host_app):
         async with _original_lifespan(host_app):
-            async with mcp.session_manager.run():
+            async with mcp_app.lifespan(host_app):
                 yield
 
     app.router.lifespan_context = _lifespan_with_mcp
