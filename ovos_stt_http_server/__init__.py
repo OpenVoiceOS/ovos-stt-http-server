@@ -109,6 +109,8 @@ class ModelContainer(TransformerPipelines):
         audio, context = self.transform_audio(audio)
         if lang == "auto" and context.get("stt_lang"):
             lang = context["stt_lang"]
+        if lang == "auto":
+            lang = Configuration().get("lang", "en-us")
         utterance = self.engine.execute(audio, language=lang) or ""
         return self.transform_utterance(utterance, lang)
 
