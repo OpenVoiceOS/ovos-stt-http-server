@@ -288,7 +288,7 @@ def test_translations_without_translator_returns_transcript():
     assert resp.json()["text"] == "hello world"
 
 
-class LangRecordingModel:
+class LangCapturingModel:
     """Model stub that records the language the router handed it."""
 
     def __init__(self):
@@ -315,7 +315,7 @@ def test_router_never_forwards_auto_to_the_model(monkeypatch):
 
     monkeypatch.setattr(srv, "Configuration", lambda: FakeConfig())
 
-    model = LangRecordingModel()
+    model = LangCapturingModel()
     app = FastAPI()
     app.include_router(make_openai_whisper_router(model))
     resp = TestClient(app).post(
